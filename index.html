@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>peptalk · Biblioteca de péptidos en Argentina</title>
+<meta name="description" content="Qué es cada péptido, qué dice la evidencia y en qué estado regulatorio está en Argentina y el mundo. ANMAT, FDA, EMA y WADA, con fuente y fecha.">
+<meta name="theme-color" content="#FCFBF9">
+<link rel="canonical" href="https://peptalkarg.com/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+<meta property="og:title" content="peptalk · Biblioteca de péptidos en Argentina">
+<meta property="og:description" content="Qué es cada péptido, qué dice la evidencia y en qué estado está. Con fuentes y fechas.">
+<meta property="og:url" content="https://peptalkarg.com/">
+<meta property="og:image" content="https://peptalkarg.com/assets/logo.png">
+<link rel="icon" type="image/png" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"peptalk","url":"https://peptalkarg.com/","inLanguage":"es-AR","description":"Biblioteca informativa de péptidos en Argentina: evidencia y estado regulatorio con fuente y fecha."}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<div class="topbar">
+  <p>peptalk es informativo: no reemplaza una consulta médica ni indica tratamientos. <a href="#metodo">Cómo trabajamos</a></p>
+</div>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a href="#" class="brand" aria-label="peptalk, inicio"><img src="assets/logo.png" alt="peptalk" width="112" height="35"></a>
+    <nav class="nav-links" id="navLinks" aria-label="Principal">
+      <a href="#biblioteca">Péptidos</a>
+      <a href="#sistemas">Sistemas</a>
+      <a href="#estados">Estados</a>
+      <a href="#guias">Guías</a>
+      <a href="#metodo">Metodología</a>
+    </nav>
+    <a href="#derivacion" class="btn btn-dark nav-cta">Consultar con un especialista</a>
+    <button class="burger" id="burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="navLinks"><span></span><span></span></button>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="wrap hero-in">
+    <div class="hero-copy">
+      <span class="eyebrow"><i></i>Biblioteca de péptidos · Argentina</span>
+      <h1>Qué es cada péptido, qué dice la evidencia y <span class="hl">en qué estado está.</span></h1>
+      <p class="lead">Fichas claras, en castellano, con el estado ante ANMAT, FDA, EMA y WADA. Cada dato con su fuente y su fecha de verificación. Sin promesas, sin vender nada.</p>
+
+      <div class="search" id="heroSearch">
+        <label for="q" class="sr">Buscar un péptido</label>
+        <svg class="search-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" autocomplete="off" placeholder="Buscá un péptido: nombre, código o alias" role="combobox" aria-expanded="false" aria-controls="sugg" aria-autocomplete="list">
+        <kbd class="kbd" aria-hidden="true">/</kbd>
+        <button class="search-go" id="qGo" aria-label="Buscar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <ul class="sugg" id="sugg" role="listbox" hidden></ul>
+      </div>
+      <div class="freq">
+        <span>Búsquedas frecuentes:</span>
+        <button class="chip-sm" data-q="BPC-157">BPC-157</button>
+        <button class="chip-sm" data-q="Semaglutida">Semaglutida</button>
+        <button class="chip-sm" data-q="TB-500">TB-500</button>
+        <button class="chip-sm" data-q="GHK-Cu">GHK-Cu</button>
+      </div>
+    </div>
+
+    <div class="hero-art" aria-hidden="true">
+      <img class="molecule" src="assets/molecule.png" alt="" width="200" height="172">
+      <div class="glance">
+        <div class="glance-h"><span>De un vistazo</span><span class="muted">Verificado: —</span></div>
+        <div class="glance-sys">Digestivo y peso</div>
+        <div class="glance-name">BPC-157</div>
+        <div class="glance-alias">Body Protection Compound-157 · PL 14736</div>
+        <div class="agencies">
+          <div><small>ANMAT</small><b><i class="dot d-pend"></i>Pendiente</b></div>
+          <div><small>FDA</small><b><i class="dot d-pend"></i>Pendiente</b></div>
+          <div><small>EMA</small><b><i class="dot d-pend"></i>Pendiente</b></div>
+          <div><small>WADA</small><b><i class="dot d-pend"></i>Pendiente</b></div>
+        </div>
+        <div class="glance-f"><span class="ev ev-none">Evidencia —</span><span class="link">Ver ficha →</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap trust">
+    <div><span class="ti"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg></span><div><b>Fuentes citadas en cada ficha</b><p>Boletín Oficial, ANMAT, FDA, EMA, WADA y estudios con DOI.</p></div></div>
+    <div><span class="ti"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span><div><b>Revisión médica con matrícula</b><p>Un profesional revisa cada ficha antes de publicarla.</p></div></div>
+    <div><span class="ti"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><b>Estados con fecha de verificación</b><p>Si no lo verificamos todavía, lo decimos.</p></div></div>
+  </div>
+</section>
+
+<!-- SISTEMAS -->
+<section class="wrap" id="sistemas">
+  <div class="dark-panel">
+    <div class="dp-head">
+      <div><span class="kicker">Sistemas del cuerpo</span><h2>Explorá por sistema</h2></div>
+      <p>Elegí un sistema o tocá una zona del cuerpo para ver qué péptidos se estudian ahí.</p>
+    </div>
+    <div class="dp-grid">
+      <ul class="sys-list" id="sysList" role="tablist" aria-label="Sistemas del cuerpo"></ul>
+      <div class="body-wrap">
+        <svg class="body" id="bodySvg" viewBox="0 0 320 500" role="img" aria-label="Silueta humana con zonas por sistema">
+          <defs>
+            <radialGradient id="gBody" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3a2a22"/><stop offset="1" stop-color="#1e1916"/></radialGradient>
+            <radialGradient id="gFloor" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FF6A00" stop-opacity=".45"/><stop offset="1" stop-color="#FF6A00" stop-opacity="0"/></radialGradient>
+          </defs>
+          <ellipse cx="160" cy="488" rx="110" ry="12" fill="url(#gFloor)"/>
+          <g id="silhouette" fill="url(#gBody)" stroke="rgba(255,255,255,.22)" stroke-width="1.3">
+            <circle cx="160" cy="46" r="27"/>
+            <path d="M148 70h24l2 14h-28z"/>
+            <path d="M116 88c10-6 26-8 44-8s34 2 44 8c10 6 14 16 14 30l-2 70c-1 22-6 46-10 66l-4 22H118l-4-22c-4-20-9-44-10-66l-2-70c0-14 4-24 14-30z"/>
+            <path d="M104 98c-12 6-16 18-18 32l-8 82c-2 22-4 44-2 64 1 8 12 8 13 0l6-62 10-60z"/>
+            <path d="M216 98c12 6 16 18 18 32l8 82c2 22 4 44 2 64-1 8-12 8-13 0l-6-62-10-60z"/>
+            <path d="M118 274h40l-4 110-3 80c0 10-16 10-17 0l-8-80z"/>
+            <path d="M202 274h-40l4 110 3 80c0 10 16 10 17 0l8-80z"/>
+          </g>
+          <g id="hotspots"></g>
+        </svg>
+      </div>
+      <div class="sys-card" id="sysCard" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- BIBLIOTECA -->
+<section class="wrap section" id="biblioteca">
+  <div class="lib-head">
+    <div>
+      <h2>Biblioteca de péptidos</h2>
+      <p class="muted" id="libMeta"></p>
+    </div>
+    <div class="lib-tools">
+      <div class="mini-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <label for="libQ" class="sr">Filtrar por nombre o alias</label>
+        <input id="libQ" type="search" placeholder="Filtrar por nombre o alias">
+      </div>
+      <div class="seg" role="group" aria-label="Vista">
+        <button class="on" data-view="cards" aria-pressed="true" aria-label="Vista de tarjetas"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></button>
+        <button data-view="table" aria-pressed="false" aria-label="Vista de tabla"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="chips" id="sysChips" role="group" aria-label="Filtrar por sistema"></div>
+
+  <div class="filters">
+    <label><span>ANMAT</span><select data-f="anmat"></select></label>
+    <label><span>FDA</span><select data-f="fda"></select></label>
+    <label><span>WADA</span><select data-f="wada"></select></label>
+    <label><span>Evidencia</span><select data-f="evid"></select></label>
+    <button class="btn-link" id="clearAll" hidden>Limpiar todo</button>
+  </div>
+  <p class="muted small" id="count" aria-live="polite"></p>
+
+  <div id="results"></div>
+  <div class="empty" id="empty" hidden>
+    <b>No hay péptidos con estos filtros</b>
+    <p>Probá quitar algún filtro o buscar por otro nombre.</p>
+    <button class="btn btn-ghost" id="clearEmpty">Limpiar filtros</button>
+  </div>
+  <p class="note"><i class="dot d-pend"></i> Los estados marcados como «Pendiente» todavía no fueron verificados por peptalk lab. Se muestran igual, para que sepas qué falta.</p>
+</section>
+
+<!-- ESTADOS -->
+<section class="band" id="estados">
+  <div class="wrap states">
+    <div class="states-copy">
+      <span class="kicker">Cómo leer los estados</span>
+      <h2>Estados y evidencia, sin vueltas</h2>
+      <p>Siempre en el mismo orden: <b>ANMAT → FDA → EMA → WADA</b>. Cada estado lleva fuente y fecha. Si todavía no lo verificamos, dice «Pendiente» y se muestra igual.</p>
+      <p>Que un péptido esté aprobado para un uso no significa que esté aprobado para todos. Que se venda «solo para investigación» no es una aprobación.</p>
+    </div>
+    <div class="legend-card">
+      <h3>Estados por agencia</h3>
+      <ul class="legend" id="legendStates"></ul>
+    </div>
+    <div class="legend-card">
+      <h3>Nivel de evidencia</h3>
+      <p class="muted small">Mide qué tipo de evidencia hay. No dice si funciona ni si es seguro.</p>
+      <ul class="legend" id="legendEv"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- NOVEDADES + NEWSLETTER -->
+<section class="wrap section" id="novedades">
+  <div class="news">
+    <div class="news-main">
+      <span class="kicker">Resumen semanal</span>
+      <h2>Lo que pasa con los péptidos, una vez por semana</h2>
+      <p>Regulación, estudios nuevos y novedades de Argentina (ANMAT, Boletín Oficial, sociedades médicas), con la fuente de cada cosa. Estamos preparando el primer número.</p>
+      <ul class="news-cats">
+        <li><span class="tag">Regulación</span>Cambios en ANMAT, FDA, EMA y la lista WADA.</li>
+        <li><span class="tag">Investigación</span>Ensayos y estudios publicados, con DOI.</li>
+        <li><span class="tag">Argentina</span>Lo local: disposiciones, alertas y sociedades médicas.</li>
+      </ul>
+    </div>
+    <form class="newsletter" id="newsForm" novalidate>
+      <h3>Recibí el resumen semanal</h3>
+      <p class="muted small">Un email por semana. Te das de baja cuando quieras.</p>
+      <label for="nEmail" class="sr">Tu email</label>
+      <div class="nl-row">
+        <input id="nEmail" type="email" placeholder="tu@email.com" autocomplete="email" required>
+        <button class="btn btn-orange" type="submit">Suscribirme</button>
+      </div>
+      <p class="form-msg" id="newsMsg" role="status"></p>
+    </form>
+  </div>
+</section>
+
+<!-- DERIVACIÓN -->
+<section class="wrap section" id="derivacion">
+  <div class="referral">
+    <div class="ref-copy">
+      <span class="kicker kicker-light">Derivación</span>
+      <h2>¿Querés hablarlo con un especialista?</h2>
+      <p>Te ponemos en contacto con un médico matriculado en Argentina. No es una consulta online ni un diagnóstico.</p>
+      <ul class="checks">
+        <li>Sin costo de peptalk</li>
+        <li>Teleconsulta o presencial, en tu provincia</li>
+        <li>Tus datos solo se usan para esta derivación</li>
+      </ul>
+      <div class="isnot">
+        <div><small>Es</small><b>Contacto con un profesional</b></div>
+        <div><small>No es</small><b>Diagnóstico · Receta · Urgencias</b></div>
+      </div>
+      <p class="urg">Urgencias: llamá al <a href="tel:107">107</a> (SAME).</p>
+      <ol class="steps">
+        <li><span>1</span>Recibimos tu pedido</li>
+        <li><span>2</span>Se lo pasamos al médico</li>
+        <li><span>3</span>El médico te contacta</li>
+      </ol>
+    </div>
+
+    <form class="ref-form" id="refForm" novalidate>
+      <h3>Pedí una derivación</h3>
+      <div class="err-summary" id="errSummary" tabindex="-1" hidden></div>
+      <div class="field"><label for="fName">Nombre</label><input id="fName" name="name" autocomplete="name"><small class="err" data-for="name"></small></div>
+      <div class="field-2">
+        <div class="field"><label for="fEmail">Email</label><input id="fEmail" name="email" type="email" autocomplete="email"></div>
+        <div class="field"><label for="fPhone">Teléfono</label><input id="fPhone" name="phone" type="tel" autocomplete="tel"></div>
+      </div>
+      <small class="hint">Completá al menos uno.</small><small class="err" data-for="contact"></small>
+      <div class="field"><label for="fProv">Provincia</label><select id="fProv" name="prov"><option value="">Elegí una opción</option></select><small class="err" data-for="prov"></small></div>
+      <div class="field"><label for="fPep">Péptido de interés <em>(opcional)</em></label><input id="fPep" name="pep" list="pepList"><datalist id="pepList"></datalist></div>
+      <fieldset class="field"><legend>¿Cómo preferís la consulta?</legend>
+        <div class="mod">
+          <label><input type="radio" name="mod" value="Teleconsulta" checked><span><b>Teleconsulta</b><small>Videollamada</small></span></label>
+          <label><input type="radio" name="mod" value="Presencial"><span><b>Presencial</b><small>En consultorio</small></span></label>
+        </div>
+      </fieldset>
+      <div class="field"><label for="fMotivo">Motivo breve <em>(opcional)</em></label><textarea id="fMotivo" name="motivo" maxlength="300" rows="3"></textarea>
+        <small class="hint row"><span>No incluyas historia clínica ni estudios.</span><span id="motivoLen">0/300</span></small></div>
+      <label class="check"><input type="checkbox" name="adult"> <span>Soy mayor de 18 años.</span></label><small class="err" data-for="adult"></small>
+      <label class="check"><input type="checkbox" name="c1"> <span>Acepto que peptalk trate los datos que cargo, incluidos datos de salud, solo para gestionar esta derivación.</span></label><small class="err" data-for="c1"></small>
+      <label class="check"><input type="checkbox" name="c2"> <span>Acepto que peptalk comparta estos datos con el profesional que me va a contactar.</span></label><small class="err" data-for="c2"></small>
+      <button class="btn btn-orange btn-block" type="submit" id="refSubmit">Enviar pedido</button>
+      <p class="form-msg" id="refMsg" role="status"></p>
+    </form>
+  </div>
+</section>
+
+<!-- GUÍAS -->
+<section class="wrap section" id="guias">
+  <div class="sec-head"><div><span class="kicker">Aprender</span><h2>Guías para entender antes de preguntar</h2></div></div>
+  <div class="guides">
+    <article class="guide"><span class="tag">Básicos</span><h3>Péptidos 101: qué son y en qué se diferencian de otros medicamentos</h3><p class="muted small">Próximamente</p></article>
+    <article class="guide"><span class="tag">Regulación</span><h3>Qué significa «solo para investigación» (RUO) y por qué no es una aprobación</h3><p class="muted small">Próximamente</p></article>
+    <article class="guide"><span class="tag">Argentina</span><h3>Cómo se aprueba un medicamento en Argentina: el rol de la ANMAT</h3><p class="muted small">Próximamente</p></article>
+  </div>
+</section>
+
+<!-- MÉTODO -->
+<section class="wrap section" id="metodo">
+  <div class="sec-head"><div><span class="kicker">Cómo trabajamos</span><h2>Tres pasos para cada dato</h2></div></div>
+  <ol class="method">
+    <li><span class="num">01</span><h3>Buscamos fuentes primarias</h3><p>Registros oficiales, resoluciones y estudios publicados. No usamos tiendas ni foros como fuente.</p></li>
+    <li><span class="num">02</span><h3>Verifica peptalk lab y revisa un médico</h3><p>Cada estado se contrasta con su fuente y la ficha pasa por revisión profesional.</p></li>
+    <li><span class="num">03</span><h3>Re-verificamos y registramos cada cambio</h3><p>Los estados cambian. Cada actualización queda con fecha para que sepas qué cambió.</p></li>
+  </ol>
+  <div class="disclaimer">
+    <b>Información, no indicación</b>
+    <p>Este contenido es informativo y no reemplaza la consulta con un profesional. No indicamos dosis, usos ni dónde conseguir productos. Si tenés una urgencia, llamá al 107 (SAME) o a tu servicio de emergencias.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div class="foot-brand">
+      <img src="assets/logo-white.png" alt="peptalk" width="140" height="39" loading="lazy">
+      <p>Información sobre péptidos, con fuentes y fechas.</p>
+    </div>
+    <div><h4>Biblioteca</h4><a href="#biblioteca">Péptidos</a><a href="#sistemas">Sistemas</a><a href="#estados">Estados por agencia</a></div>
+    <div><h4>Aprender</h4><a href="#novedades">Novedades</a><a href="#guias">Guías</a><a href="#estados">Cómo leer la evidencia</a></div>
+    <div><h4>peptalk</h4><a href="#metodo">Metodología</a><a href="#derivacion">Derivación</a></div>
+  </div>
+  <div class="wrap foot-b">
+    <span>peptalk no vende productos ni presta servicios médicos.</span>
+    <span>© 2026 peptalk · Hecho en Argentina</span>
+  </div>
+</footer>
+
+<!-- FICHA (drawer) -->
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" hidden>
+  <button class="drawer-x" id="drawerX" aria-label="Cerrar ficha"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div id="drawerBody"></div>
+</aside>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
