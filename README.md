@@ -1,15 +1,14 @@
 # peptalk · landing
 
-Sitio estático (sin build ni dependencias), publicado en GitHub Pages con el dominio peptalkarg.com.
+Landing en React (Vite + TypeScript), publicada en GitHub Pages con el dominio peptalkarg.com por el workflow `.github/workflows/deploy.yml`. El backoffice (`admin/`) sigue siendo HTML y JS sin compilar.
 
-- `index.html`: estructura y textos fijos.
-- `styles.css`: tokens de diseño arriba (colores, radios, sombras) y estilos por sección.
-- `data.js`: sistemas, agencias, estados, evidencia y la conexión a Supabase que usan los formularios.
-- `app.js`: lógica por módulos (buscador, mapa del cuerpo, biblioteca, ficha, formularios).
+- `src/`: la landing. `App.tsx` arma las secciones; `components/` tiene una por archivo (Nav, Hero, Systems, Library, PeptideCard, Drawer, Sections, BrandSelect, CardSwap) y `lib/catalog.ts` deriva los datos del catálogo.
+- `styles.css` y `brand/tokens/tokens.css`: los estilos (los importa `src/main.tsx`).
+- `data.js` (sistemas, agencias, estados, evidencia, conexión a Supabase) y `peptides.js` (generado): datos que no pasan por Vite, para que el backoffice pueda publicar sin tocar código.
 
 Para sumar un péptido o verificar un estado se edita solo `data.js`. Las fichas tienen URL propia: `peptalkarg.com/#p/<slug>`.
 
-Probar en local: `python3 -m http.server` y abrir http://localhost:8000.
+Probar en local: `npm install` y `npm run dev` (http://localhost:5173; el backoffice queda en /admin/). Compilar: `npm run build`.
 
 ## Design system (`brand/`)
 
@@ -29,13 +28,10 @@ python3 -m venv .venv && .venv/bin/pip install fonttools uharfbuzz
 .venv/bin/python brand/scripts/build.py --no-png  # solo tokens y SVG
 ```
 
-## Piezas en React (`react/`)
+## Tarjetas y pila del hero
 
-El sitio sigue siendo estático; lo que está en React se compila a un archivo que se commitea.
-
-- `react/src/components/CardSwap.tsx`: pila de tarjetas de Bencho (MIT, bencho.dev/licence), con fichas en lugar de fotos. Sus variables se mapean a los tokens del sitio: `--fill-slab` → `--pt-surface`, `--fill-on` → `--ink`; `--t` es la posición de cada tarjeta y la escribe el componente.
-- `react/src/hero.tsx`: monta la pila de fichas destacadas en `#spot`. Las caras las arma `app.js` (`PT.spotCards`) con los mismos helpers del resto del sitio.
-- Compilar después de tocar algo de `react/src`: `cd react && npm install && npm run build` (y `npm run typecheck`). Después, `python3 scripts/bust.py`.
+- `src/components/PeptideCard.tsx`: arriba la cadena de aminoácidos real (`sequence` en la ficha; sin secuencia muestra el tipo), abajo el veredicto en Argentina y la evidencia. Las aprobadas por ANMAT van invertidas.
+- `src/components/CardSwap.tsx`: pila de Bencho (MIT, bencho.dev/licence) con las fichas destacadas. `--fill-slab` → `--pt-surface`, `--fill-on` → `--ink`; `--t` es la posición de cada tarjeta y la escribe el componente.
 
 ## Cuerpo 3D e íconos
 

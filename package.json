@@ -1,0 +1,23 @@
+{
+  "name": "peptalk-landing",
+  "private": true,
+  "type": "module",
+  "description": "Landing de peptalk en React (Vite). El backoffice (admin/) y los datos (data.js, peptides.js) siguen siendo archivos estáticos.",
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}

@@ -1,6 +1,6 @@
 """Versiona por hash los CSS/JS para que el navegador no mezcle archivos viejos y nuevos.
 
-Correr antes de cada commit que toque CSS o JS: python3 scripts/bust.py
+Correr antes de cada commit que toque los datos (data.js, peptides.js) o el backoffice: python3 scripts/bust.py
 """
 import hashlib
 import re
@@ -20,8 +20,7 @@ def stamp(path, rels, base=""):
     (ROOT / path).write_text(text)
 
 
-# app.js carga body3d.js: primero se versiona esa referencia y después app.js en el HTML.
-stamp("app.js", ["body3d.js"])
-stamp("index.html", ["brand/tokens/tokens.css", "styles.css", "data.js", "peptides.js", "app.js", "react/dist/hero.js"])
+# La landing la compila Vite (sus archivos ya salen con hash); acá sólo los datos, que no pasan por Vite.
+stamp("index.html", ["data.js", "peptides.js"])
 stamp("admin/index.html", ["admin.css", "admin.js", "media.js", "newsletter.js", "config.js", "../data.js"], base="admin/")
 print("ok")

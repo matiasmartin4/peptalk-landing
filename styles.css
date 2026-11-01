@@ -496,25 +496,7 @@ td small { display: block; color: var(--ink-3); font-size: 12.5px; }
 #clearAll .i { width: 14px; height: 14px; }
 
 /* Biblioteca · tarjetas */
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 14px; }
-.card { position: relative; display: flex; flex-direction: column; min-width: 0; padding: 0; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; transition: border-color .15s, box-shadow .2s var(--ease), transform .2s var(--ease); animation: rise .35s var(--ease) both; }
-.card:hover { border-color: var(--peach-2); box-shadow: 0 18px 40px rgba(26,26,26,.08); transform: translateY(-3px); }
-@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
-.card-band { position: relative; display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px; background: linear-gradient(135deg, var(--cream), #FFE9D2); overflow: hidden; }
 .card-mark { position: absolute; right: -14px; top: -18px; width: 96px; height: 96px; color: var(--orange); opacity: .1; stroke-width: 1.4; transition: transform .4s var(--ease), opacity .3s; }
-.card:hover .card-mark { transform: rotate(-8deg) scale(1.06); opacity: .16; }
-.card-sys { font-size: 12.5px; font-weight: 600; color: var(--rust); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card-band .ev-meter { position: relative; }
-.card-main { display: grid; gap: 2px; padding: 14px 16px 0; }
-.card-main h3 { font-size: 21px; font-weight: 800; letter-spacing: -.03em; }
-.card-main .alias { font-size: 13px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card-type { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12.5px; color: var(--ink-2); }
-.card-type .i { color: var(--ink-3); }
-.card .ag-strip { padding: 14px 16px 0; }
-.card-f { display: flex; justify-content: space-between; align-items: center; margin: 14px 16px 16px; padding-top: 12px; border-top: 1px dashed var(--line); font-size: 12.5px; color: var(--ink-3); }
-.verif { display: inline-flex; align-items: center; gap: 6px; }
-.go { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); color: var(--ink); transition: background .2s, color .2s, border-color .2s; }
-.card:hover .go { background: var(--orange); border-color: var(--orange); }
 .t-pep { display: flex; align-items: center; gap: 10px; }
 .sugg li .sys-tile { flex: none; }
 
@@ -571,8 +553,6 @@ td small { display: block; color: var(--ink-3); font-size: 12.5px; }
   .spot-foot { flex-wrap: wrap; }
 }
 .lib-bar > * { min-width: 0; }
-.card .ag-strip { display: grid; grid-template-columns: repeat(var(--n, 4), 1fr); gap: 5px; }
-.card .ag { justify-content: center; padding: 0 4px; gap: 5px; font-size: 11px; letter-spacing: .02em; }
 .d-stats .ev-txt small { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
 .dp-grid > * { min-width: 0; }
 .body-stage { overflow: hidden; }
@@ -702,3 +682,71 @@ td small { display: block; color: var(--ink-3); font-size: 12.5px; }
 /* la cara tiene alto fijo: el alias va en una línea y la evidencia no se parte */
 .csw-face .spot-id p { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .csw-face .ev-txt small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+
+/* ══ Tarjeta de péptido (src/components/PeptideCard.tsx) ════════════════
+   Arriba la cadena de aminoácidos real; abajo el veredicto en Argentina y la evidencia.
+   El tono lo da el estado ante ANMAT: aprobado = tarjeta invertida (es la excepción y
+   tiene que saltar a la vista), cosmético = crema, pendiente = borde punteado. */
+.pcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 16px; }
+.pcard { position: relative; display: flex; flex-direction: column; min-width: 0; border-radius: 22px; overflow: hidden; background: var(--pt-surface); border: 1px solid var(--line); color: var(--ink); text-decoration: none; transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s; animation: rise .35s var(--ease) both; }
+.pcard:hover { transform: translateY(-3px); box-shadow: 0 20px 44px -20px rgba(26, 26, 26, .28); border-color: var(--peach-2); }
+.pcard:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+
+.pcard-art { position: relative; height: 124px; display: grid; place-items: center; background: radial-gradient(120% 90% at 20% 0%, #FFF1E3, #FBF6F1); border-bottom: 1px solid var(--line); }
+.pcard-len { position: absolute; left: 14px; bottom: 8px; font-size: 11px; font-weight: 600; color: var(--ink-3); letter-spacing: .02em; }
+.pcard-noseq { display: grid; justify-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.chain { width: 100%; height: 100%; padding: 8px 6px 22px; }
+.chain polyline { fill: none; stroke: #D9CFC5; stroke-width: 2; }
+.chain circle { stroke: #fff; stroke-width: 1.5; }
+.chain text { font: 700 9.5px/1 var(--pt-font-family-sans); text-anchor: middle; fill: #fff; pointer-events: none; }
+.chain .hyd circle { fill: var(--ink); }
+.chain .pos circle { fill: var(--pt-color-brand-orange); }
+.chain .neg circle { fill: var(--pt-color-brand-orange-light); }
+.chain .neg text, .chain .pol text { fill: var(--rust); }
+.chain .pol circle { fill: var(--pt-color-brand-amber); }
+.chain .gp circle { fill: #CFC8C0; }
+.chain .odd circle { fill: #fff; stroke: var(--ink); stroke-dasharray: 2 2; }
+.chain .odd text { fill: var(--ink); }
+
+/* evidencia como nota: A/B en tinta, C en naranja, D/E en ámbar, sin dato punteada */
+.pgrade { position: absolute; top: 12px; right: 12px; display: grid; justify-items: center; line-height: 1; }
+.pgrade b { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; font-size: 20px; font-weight: 800; background: var(--ink); color: #fff; }
+.pgrade small { margin-top: 4px; font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.pgrade.g-B b { background: #3A3A3A; }
+.pgrade.g-C b { background: var(--pt-color-brand-orange); }
+.pgrade.g-D b, .pgrade.g-E b { background: var(--pt-color-brand-amber); color: var(--rust); }
+.pgrade.g-none b { background: transparent; color: var(--ink-3); border: 1.5px dashed #BDB6AE; }
+
+.pcard-body { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px; flex: 1; }
+.pcard-sys { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--rust); }
+.pcard-sys .i { width: 14px; height: 14px; }
+.pcard h3 { font-size: 24px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
+.pcard-alias { font-size: 12.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcard-verdict { margin-top: 4px; font-size: 16px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
+.pcard-rows { display: grid; gap: 5px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+.pcard-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+.pcard-row > span { color: var(--ink-3); }
+.pcard-row small { font-size: 11px; opacity: .8; }
+.pcard-row b { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; white-space: nowrap; }
+.pcard-foot { margin-top: auto; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); }
+.pcard-foot > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcard-go { display: inline-flex; align-items: center; gap: 4px; flex: none; font-weight: 600; color: var(--ink); }
+.pcard-go .i { width: 14px; height: 14px; transition: transform .2s var(--ease); }
+.pcard:hover .pcard-go .i { transform: translateX(3px); }
+
+.pcard.tone-pend { border-style: dashed; }
+.pcard.tone-pend .pcard-verdict { color: var(--ink-3); }
+.pcard.tone-cosm { background: linear-gradient(180deg, #FFF7EF, #FFEBD6); border-color: #F5D6B5; }
+.pcard.tone-ok { background: var(--ink); border-color: var(--ink); color: #fff; }
+.pcard.tone-ok .pcard-art { background: radial-gradient(120% 90% at 20% 0%, #2B2522, #1A1A1A); border-color: rgba(255,255,255,.1); }
+.pcard.tone-ok .chain polyline { stroke: #4A423D; }
+.pcard.tone-ok .chain circle { stroke: #1A1A1A; }
+.pcard.tone-ok .chain .hyd circle { fill: #fff; }
+.pcard.tone-ok .chain .hyd text { fill: var(--ink); }
+.pcard.tone-ok .pcard-sys, .pcard.tone-ok .pcard-verdict { color: var(--pt-color-brand-orange-light); }
+.pcard.tone-ok .pcard-alias, .pcard.tone-ok .pcard-row > span, .pcard.tone-ok .pcard-foot, .pcard.tone-ok .pcard-len, .pcard.tone-ok .pgrade small, .pcard.tone-ok .pcard-noseq { color: rgba(255,255,255,.62); }
+.pcard.tone-ok .pcard-rows { border-color: rgba(255,255,255,.14); }
+.pcard.tone-ok .pcard-go { color: #fff; }
+.pcard.tone-ok .pgrade b { background: #fff; color: var(--ink); }
+.pcard.tone-ok .d-aprob { background: #fff; }
+.pcard.tone-ok .d-noap { border-color: #fff; }
