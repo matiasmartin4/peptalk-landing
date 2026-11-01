@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>peptalk · Design system</title>
+<link rel="icon" type="image/png" href="logo/peptalk-icon-dark-32.png">
+<link rel="preload" href="fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="tokens/tokens.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: var(--pt-bg); color: var(--pt-text); font: var(--pt-font-weight-regular) var(--pt-font-size-base)/var(--pt-font-leading-body) var(--pt-font-family-sans); -webkit-font-smoothing: antialiased; }
+  img { display: block; max-width: 100%; }
+  a { color: var(--pt-accent-text); }
+  h1, h2, h3 { margin: 0; letter-spacing: var(--pt-font-tracking-heading); line-height: var(--pt-font-leading-heading); }
+  p { margin: 0; }
+  code { font: 500 12px/1.4 ui-monospace, "SF Mono", Menlo, monospace; background: var(--pt-surface-muted); padding: 2px 6px; border-radius: 6px; }
+
+  .shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  .side { position: sticky; top: 0; height: 100vh; padding: var(--pt-space-8) var(--pt-space-6); border-right: 1px solid var(--pt-border); display: flex; flex-direction: column; gap: var(--pt-space-6); }
+  .side img { width: 128px; }
+  .side nav { display: grid; gap: 2px; }
+  .side nav a { color: var(--pt-text-soft); text-decoration: none; font-size: var(--pt-font-size-md); padding: 7px 10px; border-radius: var(--pt-radius-sm); }
+  .side nav a:hover { background: var(--pt-surface-warm); color: var(--pt-text); }
+  .side small { margin-top: auto; color: var(--pt-text-muted); font-size: var(--pt-font-size-xs); }
+  main { padding: var(--pt-space-12) var(--pt-space-12) var(--pt-space-30); max-width: 1240px; }
+
+  .intro h1 { font-size: var(--pt-font-size-5xl); font-weight: var(--pt-font-weight-extrabold); letter-spacing: var(--pt-font-tracking-display); }
+  .intro p { margin-top: var(--pt-space-4); color: var(--pt-text-soft); font-size: var(--pt-font-size-lg); max-width: 640px; }
+  .downloads { display: flex; gap: var(--pt-space-2); flex-wrap: wrap; margin-top: var(--pt-space-6); }
+
+  section { padding-top: var(--pt-space-20); }
+  .eyebrow { font-size: var(--pt-font-size-xs); font-weight: var(--pt-font-weight-semibold); letter-spacing: var(--pt-font-tracking-eyebrow); text-transform: uppercase; color: var(--pt-text-muted); margin-bottom: var(--pt-space-2); }
+  section > h2 { font-size: var(--pt-font-size-3xl); font-weight: var(--pt-font-weight-bold); }
+  section > p.lead { margin-top: var(--pt-space-2); color: var(--pt-text-soft); max-width: 680px; }
+  .grid { display: grid; gap: var(--pt-space-4); margin-top: var(--pt-space-6); }
+  .g2 { grid-template-columns: repeat(2, 1fr); } .g3 { grid-template-columns: repeat(3, 1fr); } .g4 { grid-template-columns: repeat(4, 1fr); } .g6 { grid-template-columns: repeat(6, 1fr); }
+  .tile { border: 1px solid var(--pt-border); border-radius: var(--pt-radius-lg); background: var(--pt-surface); overflow: hidden; }
+  .stage { display: grid; place-items: center; padding: var(--pt-space-10); min-height: 220px; }
+  .stage.dark { background: #0B0908; } .stage.cream { background: var(--pt-color-brand-cream); } .stage.paper { background: var(--pt-bg); }
+  .cap { display: flex; justify-content: space-between; align-items: center; gap: var(--pt-space-3); padding: var(--pt-space-3) var(--pt-space-4); border-top: 1px solid var(--pt-border); font-size: var(--pt-font-size-sm); }
+  .cap span { color: var(--pt-text-muted); }
+  .cap a { font-weight: var(--pt-font-weight-semibold); text-decoration: none; white-space: nowrap; }
+
+  .btn { display: inline-flex; align-items: center; gap: var(--pt-space-2); height: var(--pt-layout-control-height); padding: 0 var(--pt-space-5); border-radius: var(--pt-radius-pill); border: 1px solid transparent; font: var(--pt-font-weight-semibold) var(--pt-font-size-md) var(--pt-font-family-sans); text-decoration: none; cursor: pointer; transition: filter var(--pt-motion-fast), transform var(--pt-motion-fast) var(--pt-motion-ease); }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--pt-accent); color: var(--pt-on-accent); }
+  .btn-primary:hover { filter: brightness(.94); }
+  .btn-dark { background: var(--pt-inverse); color: var(--pt-on-inverse); }
+  .btn-ghost { background: var(--pt-surface); border-color: var(--pt-border); color: var(--pt-text); }
+  .btn-ghost:hover { border-color: var(--pt-text); }
+
+  /* Colores */
+  .swatch .chip { height: 120px; display: flex; align-items: flex-end; padding: var(--pt-space-3); font-size: var(--pt-font-size-xs); font-weight: var(--pt-font-weight-semibold); }
+  .swatch .meta { padding: var(--pt-space-3) var(--pt-space-4); display: grid; gap: 2px; font-size: var(--pt-font-size-sm); }
+  .swatch .meta b { font-size: var(--pt-font-size-md); }
+  .swatch .meta span { color: var(--pt-text-muted); }
+  .aa { display: inline-flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .aa i { font-style: normal; font-size: 11px; font-weight: var(--pt-font-weight-semibold); padding: 1px 6px; border-radius: 99px; background: var(--pt-surface-muted); }
+  .aa i.ok { background: #E8F5EC; color: #1F7A35; } .aa i.no { background: #FDECEC; color: #B42318; }
+  .grad { height: 96px; border-radius: var(--pt-radius-md); }
+
+  /* Tipografía */
+  .type-hero { display: grid; grid-template-columns: auto 1fr; gap: var(--pt-space-12); align-items: center; padding: var(--pt-space-10); }
+  .type-hero .aa-big { font-size: 160px; font-weight: var(--pt-font-weight-bold); letter-spacing: -.05em; line-height: .9; }
+  .type-hero ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--pt-space-2); font-size: var(--pt-font-size-2xl); }
+  .scale { margin-top: var(--pt-space-6); border-top: 1px solid var(--pt-border); }
+  .scale div { display: grid; grid-template-columns: 180px 1fr; align-items: baseline; gap: var(--pt-space-6); padding: var(--pt-space-4) 0; border-bottom: 1px solid var(--pt-border); }
+  .scale code { justify-self: start; }
+  .scale p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Espaciado, radios, sombras */
+  .bars { display: grid; gap: var(--pt-space-2); margin-top: var(--pt-space-6); }
+  .bars div { display: grid; grid-template-columns: 90px 70px 1fr; align-items: center; gap: var(--pt-space-4); font-size: var(--pt-font-size-sm); }
+  .bars span { color: var(--pt-text-muted); }
+  .bars i { display: block; height: 14px; border-radius: 4px; background: var(--pt-accent); }
+  .radius-box { height: 96px; background: var(--pt-color-brand-cream); border: 1.5px solid var(--pt-border-warm); }
+  .shadow-box { height: 110px; border-radius: var(--pt-radius-lg); background: var(--pt-surface); display: grid; place-items: center; font-size: var(--pt-font-size-sm); color: var(--pt-text-muted); }
+
+  /* Área de respeto */
+  .clear { position: relative; display: inline-block; padding: var(--cs); outline: 1.5px dashed var(--pt-color-brand-amber); background: repeating-linear-gradient(45deg, rgba(255,176,102,.06) 0 8px, transparent 8px 16px); }
+  .clear img { height: 120px; width: auto; background: var(--pt-bg); }
+  .clear i { position: absolute; width: var(--cs); height: var(--cs); border-radius: 50%; border: 1.5px solid var(--pt-color-brand-amber); }
+
+  /* Do / don't */
+  .rule .stage { min-height: 150px; padding: var(--pt-space-6); }
+  .rule img { width: 200px; }
+  .rule .cap { justify-content: flex-start; font-weight: var(--pt-font-weight-semibold); color: var(--pt-text); }
+  .rule .cap::before { content: ""; width: 16px; height: 16px; border-radius: 50%; flex: none; }
+  .rule.ok .cap::before { background: var(--pt-color-status-success); }
+  .rule.no .cap::before { background: var(--pt-color-status-error); }
+
+  /* Componentes */
+  .comp { padding: var(--pt-space-8); display: flex; flex-wrap: wrap; gap: var(--pt-space-3); align-items: center; }
+  .chip-c { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: var(--pt-radius-pill); border: 1px solid var(--pt-border); background: var(--pt-surface); font-size: var(--pt-font-size-md); font-weight: var(--pt-font-weight-medium); }
+  .chip-c.on { background: var(--pt-inverse); color: var(--pt-on-inverse); border-color: var(--pt-inverse); }
+  .badge { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: var(--pt-radius-pill); font-size: 11px; font-weight: var(--pt-font-weight-bold); }
+  .eyebrow-c { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: var(--pt-radius-pill); background: var(--pt-surface-warm); border: 1px solid var(--pt-border-warm); color: var(--pt-accent-text); font-size: 12.5px; font-weight: var(--pt-font-weight-semibold); }
+  .eyebrow-c::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--pt-accent); box-shadow: 0 0 0 4px rgba(255,106,0,.18); }
+  .input-c { height: var(--pt-layout-control-height); width: 260px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--pt-border); background: var(--pt-surface); font: inherit; color: var(--pt-text); }
+  .input-c:focus { outline: none; border-color: var(--pt-accent); box-shadow: var(--pt-shadow-focus); }
+  .card-c { width: 280px; padding: var(--pt-space-5); border-radius: var(--pt-radius-md); border: 1px solid var(--pt-border); background: var(--pt-surface); box-shadow: var(--pt-shadow-sm); }
+  .card-c small { color: var(--pt-accent-text); font-weight: var(--pt-font-weight-semibold); font-size: var(--pt-font-size-xs); }
+  .card-c h3 { font-size: var(--pt-font-size-2xl); font-weight: var(--pt-font-weight-extrabold); margin-top: 4px; }
+  .card-c p { color: var(--pt-text-muted); font-size: var(--pt-font-size-sm); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .theme-dark { background: var(--pt-bg); color: var(--pt-text); border-radius: var(--pt-radius-lg); }
+
+  .apps img { width: 100%; height: auto; }
+  pre { margin: var(--pt-space-4) 0 0; padding: var(--pt-space-5); background: var(--pt-color-brand-ink); color: #F3EDE5; border-radius: var(--pt-radius-md); overflow-x: auto; font: 12.5px/1.6 ui-monospace, "SF Mono", Menlo, monospace; }
+
+  @media (max-width: 1000px) {
+    .shell { grid-template-columns: 1fr; }
+    .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; border-right: 0; border-bottom: 1px solid var(--pt-border); }
+    .side nav { display: none; }
+    main { padding: var(--pt-space-8) var(--pt-space-5) var(--pt-space-20); }
+    .g3, .g4, .g6 { grid-template-columns: repeat(2, 1fr); }
+    .type-hero { grid-template-columns: 1fr; }
+    .intro h1 { font-size: var(--pt-font-size-4xl); }
+  }
+  @media (max-width: 600px) { .g2, .g3, .g4 { grid-template-columns: 1fr; } .scale div { grid-template-columns: 1fr; gap: 4px; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <img src="logo/peptalk-logo.svg" alt="peptalk">
+    <nav aria-label="Secciones">
+      <a href="#logo">01 · Logo</a>
+      <a href="#isotipo">02 · Isotipo</a>
+      <a href="#variaciones">03 · Variaciones</a>
+      <a href="#color">04 · Color</a>
+      <a href="#tipografia">05 · Tipografía</a>
+      <a href="#respeto">06 · Área de respeto</a>
+      <a href="#fondos">07 · Fondos</a>
+      <a href="#iconos">08 · Íconos</a>
+      <a href="#uso">09 · Uso correcto</a>
+      <a href="#aplicaciones">10 · Aplicaciones</a>
+      <a href="#tokens">11 · Tokens</a>
+      <a href="#componentes">12 · Componentes</a>
+    </nav>
+    <small>Generado desde <code>tokens.json</code></small>
+  </aside>
+
+<main>
+  <header class="intro">
+    <div class="eyebrow">Identidad visual</div>
+    <h1>Design system de peptalk</h1>
+    <p>Logo, color, tipografía y tokens listos para usar en web, redes y presentaciones. Todo sale de un solo archivo de tokens.</p>
+    <div class="downloads">
+      <a class="btn btn-dark" href="tokens/tokens.css" download>tokens.css</a>
+      <a class="btn btn-ghost" href="tokens/tokens.json" download>tokens.json</a>
+      <a class="btn btn-ghost" href="tokens/tailwind.preset.js" download>tailwind.preset.js</a>
+      <a class="btn btn-ghost" href="logo/peptalk-logo.svg" download>Logo SVG</a>
+    </div>
+  </header>
+
+  <section id="logo">
+    <div class="eyebrow">01 · Logo principal</div>
+    <h2>Isotipo + logotipo</h2>
+    <p class="lead">El logotipo es «peptalk» en Inter ExtraBold con espaciado −0,045 em, pasado a trazos: no depende de tener la fuente instalada.</p>
+    <div class="grid">
+      <div class="tile"><div class="stage paper" style="min-height:320px"><img src="logo/peptalk-logo.svg" alt="Logo peptalk" style="width:min(560px,100%)"></div>
+        <div class="cap"><span>peptalk-logo · versión principal</span><span><a href="logo/peptalk-logo.svg" download>SVG</a> · <a href="logo/peptalk-logo@2x.png" download>PNG</a></span></div></div>
+    </div>
+  </section>
+
+  <section id="isotipo">
+    <div class="eyebrow">02 · Isotipo</div>
+    <h2>Dos gotas unidas y una esfera</h2>
+    <p class="lead">Representa la unión de aminoácidos: dos esferas enlazadas y una que se acerca. Se usa solo cuando el nombre ya está presente o el espacio es cuadrado.</p>
+    <div class="grid g2">
+      <div class="tile"><div class="stage paper"><img src="logo/peptalk-isotipo.svg" alt="Isotipo" style="width:220px"></div><div class="cap"><span>peptalk-isotipo</span><span><a href="logo/peptalk-isotipo.svg" download>SVG</a> · <a href="logo/peptalk-isotipo@2x.png" download>PNG</a></span></div></div>
+      <div class="tile"><div class="stage dark"><img src="logo/peptalk-isotipo.svg" alt="Isotipo sobre oscuro" style="width:220px"></div><div class="cap"><span>Sobre fondo oscuro</span><span>mismo archivo</span></div></div>
+    </div>
+  </section>
+
+  <section id="variaciones">
+    <div class="eyebrow">03 · Variaciones</div>
+    <h2>Claro y oscuro</h2>
+    <p class="lead">El isotipo nunca cambia de color. Solo el logotipo pasa de gris oscuro a blanco sobre fondos oscuros.</p>
+    <div class="grid g2">
+      <div class="tile"><div class="stage dark"><img src="logo/peptalk-logo-white.svg" alt="Logo blanco" style="width:320px"></div><div class="cap"><span>peptalk-logo-white</span><span><a href="logo/peptalk-logo-white.svg" download>SVG</a> · <a href="logo/peptalk-logo-white@2x.png" download>PNG</a></span></div></div>
+      <div class="tile"><div class="stage cream"><img src="logo/peptalk-logo.svg" alt="Logo sobre crema" style="width:320px"></div><div class="cap"><span>peptalk-logo sobre crema</span><span><a href="logo/peptalk-logo.svg" download>SVG</a></span></div></div>
+      <div class="tile"><div class="stage dark"><img src="logo/peptalk-logotipo-white.svg" alt="Logotipo blanco" style="width:260px"></div><div class="cap"><span>Logotipo solo · blanco</span><span><a href="logo/peptalk-logotipo-white.svg" download>SVG</a></span></div></div>
+      <div class="tile"><div class="stage paper"><img src="logo/peptalk-logotipo.svg" alt="Logotipo" style="width:260px"></div><div class="cap"><span>Logotipo solo</span><span><a href="logo/peptalk-logotipo.svg" download>SVG</a></span></div></div>
+    </div>
+  </section>
+
+  <section id="color">
+    <div class="eyebrow">04 · Paleta de colores</div>
+    <h2>Seis colores de marca</h2>
+    <p class="lead">Las etiquetas AA muestran el contraste del texto sobre blanco. El naranja principal no alcanza para texto chico: para links y texto naranja se usa <code>rust</code>.</p>
+    <div class="grid g6" id="brandSwatches"></div>
+    <h3 style="margin-top:var(--pt-space-10);font-size:var(--pt-font-size-xl)">Colores de soporte</h3>
+    <div class="grid g6" id="supportSwatches"></div>
+    <h3 style="margin-top:var(--pt-space-10);font-size:var(--pt-font-size-xl)">Degradés</h3>
+    <div class="grid g4">
+      <div><div class="grad" style="background:var(--pt-gradient-isotipo)"></div><p class="cap" style="border:0;padding-inline:0"><code>gradient-isotipo</code></p></div>
+      <div><div class="grad" style="background:var(--pt-gradient-sphere)"></div><p class="cap" style="border:0;padding-inline:0"><code>gradient-sphere</code></p></div>
+      <div><div class="grad" style="background:var(--pt-gradient-text)"></div><p class="cap" style="border:0;padding-inline:0"><code>gradient-text</code></p></div>
+      <div><div class="grad" style="background:var(--pt-gradient-glow)"></div><p class="cap" style="border:0;padding-inline:0"><code>gradient-glow</code></p></div>
+    </div>
+  </section>
+
+  <section id="tipografia">
+    <div class="eyebrow">05 · Tipografía</div>
+    <h2>Inter, en cuatro pesos</h2>
+    <p class="lead">Una sola familia para todo. ExtraBold queda reservado para el logotipo y titulares grandes. La fuente se sirve desde el sitio (<code>fonts/InterVariable.woff2</code>), sin depender de Google Fonts.</p>
+    <div class="tile type-hero">
+      <div><div class="aa-big">Aa</div><div style="font-size:var(--pt-font-size-3xl);font-weight:600;margin-top:8px">Inter</div></div>
+      <ul>
+        <li style="font-weight:700">Inter Bold · 700</li>
+        <li style="font-weight:600">Inter Semibold · 600</li>
+        <li style="font-weight:500">Inter Medium · 500</li>
+        <li style="font-weight:400;color:var(--pt-text-muted)">Inter Regular · 400</li>
+      </ul>
+    </div>
+    <div class="scale" id="typeScale"></div>
+  </section>
+
+  <section id="respeto">
+    <div class="eyebrow">06 · Espaciado y área de respeto</div>
+    <h2>El aire mínimo es la esfera</h2>
+    <p class="lead">Alrededor del logo se deja, como mínimo, el diámetro de la esfera del isotipo (0,36 × alto del isotipo). Tamaño mínimo: 96 px de ancho el logo completo, 20 px el isotipo.</p>
+    <div class="grid"><div class="tile"><div class="stage paper" style="min-height:300px">
+      <div class="clear" style="--cs:43px"><img src="logo/peptalk-logo.svg" alt="Logo con área de respeto"><i style="left:0;top:0"></i><i style="right:0;top:0"></i><i style="left:0;bottom:0"></i><i style="right:0;bottom:0"></i></div>
+    </div></div></div>
+    <div class="bars" id="spaceBars"></div>
+    <div class="grid g6" id="radii"></div>
+    <div class="grid g4" id="shadows"></div>
+  </section>
+
+  <section id="fondos">
+    <div class="eyebrow">07 · Fondos de marca</div>
+    <h2>Arcos incandescentes</h2>
+    <p class="lead">Fondos vectoriales para portadas, redes y presentaciones. Se exportan en 1920 × 1080.</p>
+    <div class="grid g3">
+      <div class="tile"><img src="backgrounds/peptalk-bg-dark.png" alt="Fondo oscuro" loading="lazy"><div class="cap"><span>Oscuro</span><span><a href="backgrounds/peptalk-bg-dark.svg" download>SVG</a> · <a href="backgrounds/peptalk-bg-dark.png" download>PNG</a></span></div></div>
+      <div class="tile"><img src="backgrounds/peptalk-bg-light.png" alt="Fondo claro" loading="lazy"><div class="cap"><span>Claro</span><span><a href="backgrounds/peptalk-bg-light.svg" download>SVG</a> · <a href="backgrounds/peptalk-bg-light.png" download>PNG</a></span></div></div>
+      <div class="tile"><img src="backgrounds/peptalk-bg-orange.png" alt="Fondo naranja" loading="lazy"><div class="cap"><span>Naranja</span><span><a href="backgrounds/peptalk-bg-orange.svg" download>SVG</a> · <a href="backgrounds/peptalk-bg-orange.png" download>PNG</a></span></div></div>
+    </div>
+  </section>
+
+  <section id="iconos">
+    <div class="eyebrow">08 · Uso en íconos</div>
+    <h2>Ícono de app y favicon</h2>
+    <p class="lead">Cuadrado con esquinas al 22,5 % del lado e isotipo al 50 % del alto. Exportado en 1024, 512, 180 (Apple) y 32 px (favicon).</p>
+    <div class="grid g4">
+      <div class="tile"><div class="stage paper"><img src="logo/peptalk-icon-dark-512.png" alt="Ícono oscuro" style="width:160px"></div><div class="cap"><span>Oscuro</span><span><a href="logo/peptalk-icon-dark.svg" download>SVG</a> · <a href="logo/peptalk-icon-dark-1024.png" download>1024</a></span></div></div>
+      <div class="tile"><div class="stage paper"><img src="logo/peptalk-icon-light-512.png" alt="Ícono claro" style="width:160px"></div><div class="cap"><span>Claro</span><span><a href="logo/peptalk-icon-light.svg" download>SVG</a> · <a href="logo/peptalk-icon-light-1024.png" download>1024</a></span></div></div>
+      <div class="tile"><div class="stage paper"><img src="logo/peptalk-icon-dark-180.png" alt="Ícono 180" style="width:90px"></div><div class="cap"><span>Apple touch · 180</span><span><a href="logo/peptalk-icon-dark-180.png" download>PNG</a></span></div></div>
+      <div class="tile"><div class="stage paper"><img src="logo/peptalk-icon-dark-32.png" alt="Favicon" style="width:32px;image-rendering:auto"></div><div class="cap"><span>Favicon · 32</span><span><a href="logo/peptalk-icon-dark-32.png" download>PNG</a></span></div></div>
+    </div>
+  </section>
+
+  <section id="uso">
+    <div class="eyebrow">09 · Uso correcto e incorrecto</div>
+    <h2>Lo que no se hace</h2>
+    <div class="grid g4">
+      <div class="tile rule ok"><div class="stage cream"><img src="logo/peptalk-logo.svg" alt=""></div><div class="cap">Uso correcto</div></div>
+      <div class="tile rule no"><div class="stage cream"><img src="logo/peptalk-logo.svg" alt="" style="filter:hue-rotate(180deg) saturate(.6)"></div><div class="cap">No cambiar colores</div></div>
+      <div class="tile rule no"><div class="stage cream"><img src="logo/peptalk-logo.svg" alt="" style="transform:scaleX(1.35) scaleY(.75)"></div><div class="cap">No deformar</div></div>
+      <div class="tile rule no"><div class="stage cream"><img src="logo/peptalk-logo.svg" alt="" style="filter:drop-shadow(4px 6px 4px rgba(0,0,0,.45)) blur(.6px)"></div><div class="cap">No agregar efectos</div></div>
+    </div>
+  </section>
+
+  <section id="aplicaciones">
+    <div class="eyebrow">10 · Aplicaciones</div>
+    <h2>Piezas listas</h2>
+    <div class="grid apps" style="grid-template-columns:2fr 1fr">
+      <div class="tile"><img src="applications/x-banner-1500x500.png" alt="Banner" loading="lazy"><div class="cap"><span>Banner X / redes · 1500 × 500</span><a href="applications/x-banner-1500x500.png" download>PNG</a></div></div>
+      <div class="tile"><div class="stage paper" style="min-height:0;padding:var(--pt-space-6)"><img src="applications/avatar-400.png" alt="Avatar" style="width:180px"></div><div class="cap"><span>Foto de perfil · 400</span><a href="applications/avatar-400.png" download>PNG</a></div></div>
+    </div>
+    <div class="grid g2 apps">
+      <div class="tile"><img src="applications/presentation-1920x1080.png" alt="Portada de presentación" loading="lazy"><div class="cap"><span>Portada de presentación · 1920 × 1080</span><a href="applications/presentation-1920x1080.png" download>PNG</a></div></div>
+      <div class="tile"><img src="applications/og-1200x630.png" alt="Imagen para compartir" loading="lazy"><div class="cap"><span>Imagen para compartir links (OG) · 1200 × 630</span><a href="applications/og-1200x630.png" download>PNG</a></div></div>
+    </div>
+  </section>
+
+  <section id="tokens">
+    <div class="eyebrow">11 · Tokens</div>
+    <h2>Cómo se usan</h2>
+    <p class="lead">Dos capas. Los tokens base (<code>--pt-color-brand-orange</code>) guardan valores. Los semánticos (<code>--pt-accent</code>, <code>--pt-text-muted</code>) dicen para qué sirven y cambian con el tema: los componentes usan solo los semánticos.</p>
+<pre>&lt;link rel="stylesheet" href="/brand/tokens/tokens.css"&gt;
+
+.boton {
+  background: var(--pt-accent);
+  color: var(--pt-on-accent);
+  border-radius: var(--pt-radius-pill);
+  height: var(--pt-layout-control-height);
+}
+
+&lt;section data-theme="dark"&gt; … &lt;/section&gt;   /* tema oscuro por bloque */
+
+// Tailwind
+module.exports = { presets: [require('./brand/tokens/tailwind.preset.js')] }</pre>
+    <div class="tile" style="margin-top:var(--pt-space-4)"><div style="overflow-x:auto"><table id="semantic" style="width:100%;border-collapse:collapse;font-size:var(--pt-font-size-sm)"></table></div></div>
+  </section>
+
+  <section id="componentes">
+    <div class="eyebrow">12 · Componentes</div>
+    <h2>Base de la interfaz</h2>
+    <p class="lead">Los mismos componentes en tema claro y oscuro, armados solo con tokens semánticos.</p>
+    <div class="grid g2">
+      <div class="tile"><div class="comp" id="compLight"></div></div>
+      <div class="tile theme-dark" data-theme="dark"><div class="comp" id="compDark"></div></div>
+    </div>
+  </section>
+</main>
+</div>
+
+<script>
+(function () {
+  var css = getComputedStyle(document.documentElement);
+  var v = function (n) { return css.getPropertyValue(n).trim(); };
+
+  // contraste WCAG
+  var lum = function (hex) {
+    var c = hex.replace('#', '').match(/../g).map(function (x) { x = parseInt(x, 16) / 255; return x <= .03928 ? x / 12.92 : Math.pow((x + .055) / 1.055, 2.4); });
+    return .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
+  };
+  var ratio = function (a, b) { var l1 = lum(a), l2 = lum(b); return (Math.max(l1, l2) + .05) / (Math.min(l1, l2) + .05); };
+
+  var swatch = function (group, key, name, note) {
+    var hex = v('--pt-color-' + group + '-' + key).toUpperCase();
+    var onW = ratio(hex, '#FFFFFF'), onInk = ratio(hex, '#1A1A1A');
+    var fg = onW > onInk ? '#FFFFFF' : '#1A1A1A';
+    var tag = function (label, r) { return '<i class="' + (r >= 4.5 ? 'ok' : r >= 3 ? '' : 'no') + '">' + label + ' ' + r.toFixed(1) + '</i>'; };
+    return '<div class="tile swatch"><div class="chip" style="background:' + hex + ';color:' + fg + '">' + hex + '</div>' +
+      '<div class="meta"><b>' + name + '</b><span><code>--pt-color-' + group + '-' + key + '</code></span>' + (note ? '<span>' + note + '</span>' : '') +
+      '<div class="aa">' + tag('Texto/blanco', onW) + '</div></div></div>';
+  };
+  document.getElementById('brandSwatches').innerHTML = [
+    ['orange', 'Naranja principal'], ['orange-light', 'Naranja claro'], ['amber', 'Ámbar'], ['cream', 'Crema'], ['ink', 'Gris oscuro'], ['gray', 'Gris medio']
+  ].map(function (c) { return swatch('brand', c[0], c[1]); }).join('');
+  document.getElementById('supportSwatches').innerHTML = [
+    ['rust', 'Óxido', 'Texto naranja'], ['paper', 'Papel', 'Fondo de página'], ['sand', 'Arena'], ['line', 'Línea', 'Bordes'], ['ink-soft', 'Tinta suave'], ['night', 'Noche', 'Fondos oscuros']
+  ].map(function (c) { return swatch('support', c[0], c[1], c[2]); }).join('');
+
+  // escala tipográfica
+  var sizes = [['6xl', 800, 'display'], ['5xl', 800, 'display'], ['4xl', 800, 'heading'], ['3xl', 700, 'heading'], ['2xl', 700, 'heading'], ['xl', 600, 'body'], ['lg', 400, 'body'], ['base', 400, 'body'], ['md', 500, 'body'], ['sm', 400, 'body'], ['xs', 600, 'eyebrow']];
+  document.getElementById('typeScale').innerHTML = sizes.map(function (s) {
+    var up = s[2] === 'eyebrow' ? 'text-transform:uppercase;' : '';
+    return '<div><code>font-size-' + s[0] + ' · ' + v('--pt-font-size-' + s[0]) + '</code><p style="font-size:var(--pt-font-size-' + s[0] + ');font-weight:' + s[1] + ';letter-spacing:var(--pt-font-tracking-' + s[2] + ');line-height:1.15;' + up + '">Qué dice la evidencia</p></div>';
+  }).join('');
+
+  // espaciado
+  var space = ['1', '2', '3', '4', '5', '6', '8', '10', '12', '16', '20', '26', '30'];
+  document.getElementById('spaceBars').innerHTML = space.map(function (k) {
+    return '<div><code>space-' + k + '</code><span>' + v('--pt-space-' + k) + '</span><i style="width:var(--pt-space-' + k + ')"></i></div>';
+  }).join('');
+  document.getElementById('radii').innerHTML = ['sm', 'md', 'lg', 'xl', 'pill', 'icon'].map(function (k) {
+    return '<div><div class="radius-box" style="border-radius:var(--pt-radius-' + k + ')"></div><p class="cap" style="border:0;padding-inline:0"><code>radius-' + k + '</code><span>' + v('--pt-radius-' + k) + '</span></p></div>';
+  }).join('');
+  document.getElementById('shadows').innerHTML = ['sm', 'lg', 'glow', 'focus'].map(function (k) {
+    return '<div class="shadow-box" style="box-shadow:var(--pt-shadow-' + k + ')"><code>shadow-' + k + '</code></div>';
+  }).join('');
+
+  // tabla semántica
+  var sem = ['bg', 'surface', 'surface-warm', 'surface-muted', 'border', 'border-warm', 'text', 'text-soft', 'text-muted', 'accent', 'accent-text', 'on-accent', 'inverse', 'on-inverse', 'focus'];
+  var dark = document.querySelector('[data-theme="dark"]');
+  var dcss = getComputedStyle(dark);
+  var cell = function (val) { return '<td style="padding:10px 16px;border-top:1px solid var(--pt-border)"><span style="display:inline-flex;align-items:center;gap:8px"><i style="width:18px;height:18px;border-radius:5px;border:1px solid var(--pt-border);background:' + val + '"></i><code>' + val + '</code></span></td>'; };
+  document.getElementById('semantic').innerHTML =
+    '<tr><th style="text-align:left;padding:12px 16px">Token</th><th style="text-align:left;padding:12px 16px">Claro</th><th style="text-align:left;padding:12px 16px">Oscuro</th></tr>' +
+    sem.map(function (k) { return '<tr><td style="padding:10px 16px;border-top:1px solid var(--pt-border)"><code>--pt-' + k + '</code></td>' + cell(v('--pt-' + k)) + cell(dcss.getPropertyValue('--pt-' + k).trim()) + '</tr>'; }).join('');
+
+  // componentes
+  var comps =
+    '<span class="eyebrow-c">Biblioteca de péptidos</span>' +
+    '<button class="btn btn-primary">Consultar</button><button class="btn btn-dark">Ver ficha</button><button class="btn btn-ghost">Limpiar</button>' +
+    '<span class="chip-c on">Todos</span><span class="chip-c">Digestivo y peso</span>' +
+    '<span class="badge" style="background:var(--pt-color-evidence-A);color:#fff">Evidencia A</span><span class="badge" style="background:var(--pt-color-evidence-C)">Evidencia C</span><span class="badge" style="background:var(--pt-color-evidence-none);color:#4D4D4D">Evidencia —</span>' +
+    '<input class="input-c" placeholder="Buscá un péptido">' +
+    '<div class="card-c"><small>Digestivo y peso</small><h3>BPC-157</h3><p>Body Protection Compound-157</p></div>';
+  document.getElementById('compLight').innerHTML = comps;
+  document.getElementById('compDark').innerHTML = comps;
+})();
+</script>
+</body>
+</html>

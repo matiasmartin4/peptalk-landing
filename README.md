@@ -10,3 +10,21 @@ Sitio estático (sin build ni dependencias), publicado en GitHub Pages con el do
 Para sumar un péptido o verificar un estado se edita solo `data.js`. Las fichas tienen URL propia: `peptalkarg.com/#p/<slug>`.
 
 Probar en local: `python3 -m http.server` y abrir http://localhost:8000.
+
+## Design system (`brand/`)
+
+Página: https://peptalkarg.com/brand/
+
+- `brand/tokens/tokens.json`: fuente única (formato W3C Design Tokens). Colores, degradés, tipografía, espaciado, radios, sombras, movimiento y reglas del logo.
+- `brand/tokens/tokens.css` y `tailwind.preset.js`: generados. Dos capas: base (`--pt-color-brand-orange`) y semántica (`--pt-accent`, `--pt-text-muted`), con tema oscuro vía `data-theme="dark"`.
+- `brand/logo/`: logo, logotipo, isotipo e íconos en SVG (texto en Inter ExtraBold pasado a trazos) y PNG.
+- `brand/backgrounds/`, `brand/applications/`: fondos 1920 × 1080, banner 1500 × 500, avatar, portada de presentación e imagen OG.
+- `brand/fonts/`: Inter (licencia OFL), servida desde el sitio.
+
+Regenerar todo después de cambiar `tokens.json`:
+
+```
+python3 -m venv .venv && .venv/bin/pip install fonttools uharfbuzz
+.venv/bin/python brand/scripts/build.py          # con PNG (usa Google Chrome)
+.venv/bin/python brand/scripts/build.py --no-png  # solo tokens y SVG
+```

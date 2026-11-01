@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="peptalk"><title>peptalk</title><defs>
+    <linearGradient id="pt-body" x1="212" y1="20" x2="20" y2="176" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFC66B"/><stop offset="0.45" stop-color="#FF8A1F"/><stop offset="0.8" stop-color="#FF5A00"/><stop offset="1" stop-color="#E63B00"/></linearGradient>
+    <radialGradient id="pt-sphere" cx="128" cy="144" r="59.2" fx="124" fy="140" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFB066"/><stop offset="0.4" stop-color="#FF8F4A"/><stop offset="1" stop-color="#C9A9A6"/></radialGradient>
+    <radialGradient id="pt-shade" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#C42A00" stop-opacity=".55"/><stop offset="1" stop-color="#C42A00" stop-opacity="0"/></radialGradient>
+    <radialGradient id="pt-hi" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFF1DC" stop-opacity=".55"/><stop offset="1" stop-color="#FFF4E0" stop-opacity="0"/></radialGradient>
+    <radialGradient id="pt-cast" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#A32400" stop-opacity=".45"/><stop offset="1" stop-color="#A32400" stop-opacity="0"/></radialGradient>
+    <clipPath id="pt-clip"><circle cx="60" cy="118" r="52"/><circle cx="180" cy="58" r="46"/><path d="M111.18 127.17 C116.49 97.55 136.67 88.77 160.88 99.84 L135.06 48.19 C129.38 74.20 110.26 85.08 83.37 71.55 Z"/></clipPath><radialGradient id="halo" cx="0.5" cy="0.52" r="0.5"><stop offset="0" stop-color="#FF6A00" stop-opacity=".38"/><stop offset="1" stop-color="#FF6A00" stop-opacity="0"/></radialGradient></defs><rect width="1024" height="1024" rx="230.4" fill="#0B0908"/><rect width="1024" height="1024" rx="230.4" fill="url(#halo)"/><g transform="translate(204.80 266.24) scale(2.5600)">
+  <g clip-path="url(#pt-clip)">
+    <rect width="240" height="200" fill="url(#pt-body)"/>
+    <ellipse cx="64" cy="148" rx="62" ry="40" fill="url(#pt-shade)"/>
+    <ellipse cx="202" cy="90" rx="44" ry="30" fill="url(#pt-shade)" opacity=".7"/>
+    <ellipse cx="138" cy="142" rx="40" ry="26" fill="url(#pt-cast)"/>
+    <ellipse cx="44" cy="96" rx="34" ry="22" fill="url(#pt-hi)" transform="rotate(-30 44 96)"/>
+    <ellipse cx="168" cy="36" rx="32" ry="20" fill="url(#pt-hi)" transform="rotate(-30 168 36)"/>
+  </g>
+  <circle cx="142" cy="160" r="37" fill="url(#pt-sphere)"/>
+  <ellipse cx="130" cy="146" rx="15" ry="10" fill="url(#pt-hi)" opacity=".7" transform="rotate(-35 130 146)"/></g></svg>
