@@ -29,6 +29,14 @@ python3 -m venv .venv && .venv/bin/pip install fonttools uharfbuzz
 .venv/bin/python brand/scripts/build.py --no-png  # solo tokens y SVG
 ```
 
+## Piezas en React (`react/`)
+
+El sitio sigue siendo estático; lo que está en React se compila a un archivo que se commitea.
+
+- `react/src/components/CardSwap.tsx`: pila de tarjetas de Bencho (MIT, bencho.dev/licence), con fichas en lugar de fotos. Sus variables se mapean a los tokens del sitio: `--fill-slab` → `--pt-surface`, `--fill-on` → `--ink`; `--t` es la posición de cada tarjeta y la escribe el componente.
+- `react/src/hero.tsx`: monta la pila de fichas destacadas en `#spot`. Las caras las arma `app.js` (`PT.spotCards`) con los mismos helpers del resto del sitio.
+- Compilar después de tocar algo de `react/src`: `cd react && npm install && npm run build` (y `npm run typecheck`). Después, `python3 scripts/bust.py`.
+
 ## Cuerpo 3D e íconos
 
 - `body3d.js`: cuerpo de partículas con Three.js r149 (`vendor/three.min.js`, cargado recién cuando la sección de sistemas se acerca a la pantalla). La anatomía son volúmenes (elipsoides y conos redondeados) fundidos en una sola piel con unión suave y muestreados en superficie; las zonas que se encienden por sistema están en `data.js` (`systems[].zones`).

@@ -279,40 +279,20 @@
     });
   })();
 
-  /* ---------- spot: ficha destacada que rota en el hero ---------- */
-  (function spot() {
-    var el = $('#spot'), list = PT.featured.map(function (s) { return bySlug[s]; }).filter(Boolean), i = 0, timer = 0, paused = false;
-    if (!list.length) return;
-
-    var render = function () {
-      var p = list[i];
-      el.innerHTML =
-        '<div class="spot-top"><span class="spot-eyebrow">' + icon('microscope') + 'Ficha destacada</span>' +
-        '<span class="spot-pager">' + list.map(function (_, k) { return '<button type="button" data-k="' + k + '" aria-label="Ver ficha ' + (k + 1) + '"' + (k === i ? ' aria-current="true"' : '') + '></button>'; }).join('') + '</span></div>' +
+  /* ---------- spot: caras de las fichas destacadas del hero ----------
+     La pila (Card swap, en React) vive en react/dist/hero.js y lee esto. */
+  PT.spotCards = PT.featured.map(function (s) { return bySlug[s]; }).filter(Boolean).map(function (p) {
+    return {
+      id: p.slug, title: p.name,
+      html: '<div class="spot-top"><span class="spot-eyebrow">' + icon('microscope') + 'Ficha destacada</span><span class="spot-sys">' + esc(p.sysName) + '</span></div>' +
         '<div class="spot-body">' +
-          '<div class="spot-id">' + sysTile(p, 'lg') + '<div><span class="spot-sys">' + esc(p.sysName) + '</span><h3>' + esc(p.name) + '</h3><p>' + esc(p.alias) + '</p></div></div>' +
+          '<div class="spot-id">' + sysTile(p, 'lg') + '<div><h3>' + esc(p.name) + '</h3><p>' + esc(p.alias) + '</p></div></div>' +
           agencyGrid(p) +
           '<div class="spot-foot">' + evMeter(p.ev, true) +
-          '<a class="spot-cta" href="#p/' + p.slug + '" data-slug="' + p.slug + '">Ver ficha' + icon('arrow-up-right') + '</a></div>' +
-        '</div>' +
-        '<div class="spot-progress"><i' + (paused || reduceMotion ? ' class="still"' : '') + '></i></div>';
+          '<a class="spot-cta" href="#p/' + p.slug + '">Ver ficha' + icon('arrow-up-right') + '</a></div>' +
+        '</div>'
     };
-    var go = function (k) { i = (k + list.length) % list.length; el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap'); render(); schedule(); };
-    var schedule = function () {
-      clearTimeout(timer);
-      if (!paused && !reduceMotion) timer = setTimeout(function () { go(i + 1); }, 6000);
-    };
-    el.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-k]'); if (b) { go(+b.dataset.k); return; }
-      var a = e.target.closest('[data-slug]'); if (a) { e.preventDefault(); Drawer.open(a.dataset.slug); }
-    });
-    var pause = function (v) { paused = v; var bar = $('.spot-progress i', el); if (bar) bar.classList.toggle('still', v); schedule(); };
-    el.addEventListener('mouseenter', function () { pause(true); });
-    el.addEventListener('mouseleave', function () { pause(false); });
-    el.addEventListener('focusin', function () { pause(true); });
-    el.addEventListener('focusout', function () { pause(false); });
-    render(); schedule();
-  })();
+  });
 
   /* ---------- systems: lista + cuerpo 3D + tarjeta ---------- */
   (function systems() {

@@ -22,6 +22,6 @@ def stamp(path, rels, base=""):
 
 # app.js carga body3d.js: primero se versiona esa referencia y después app.js en el HTML.
 stamp("app.js", ["body3d.js"])
-stamp("index.html", ["brand/tokens/tokens.css", "styles.css", "data.js", "peptides.js", "app.js"])
+stamp("index.html", ["brand/tokens/tokens.css", "styles.css", "data.js", "peptides.js", "app.js", "react/dist/hero.js"])
 stamp("admin/index.html", ["admin.css", "admin.js", "media.js", "newsletter.js", "config.js", "../data.js"], base="admin/")
 print("ok")
