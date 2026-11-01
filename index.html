@@ -16,21 +16,22 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@Peptalkarg">
 <link rel="icon" type="image/png" sizes="32x32" href="brand/logo/peptalk-icon-dark-32.png">
 <link rel="icon" type="image/svg+xml" href="brand/logo/peptalk-icon-dark.svg">
 <link rel="apple-touch-icon" href="brand/logo/peptalk-icon-dark-180.png">
 <link rel="preload" href="brand/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="brand/tokens/tokens.css?v=5d5fe3cd">
-<link rel="stylesheet" href="styles.css?v=a65c09d1">
+<link rel="stylesheet" href="styles.css?v=2214c36c">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":"peptalk","url":"https://peptalkarg.com/","inLanguage":"es-AR","description":"Biblioteca informativa de péptidos en Argentina: evidencia y estado regulatorio con fuente y fecha."}
+{"@context":"https://schema.org","@type":"WebSite","name":"peptalk","url":"https://peptalkarg.com/","sameAs":["https://x.com/Peptalkarg"],"inLanguage":"es-AR","description":"Biblioteca informativa de péptidos en Argentina: evidencia y estado regulatorio con fuente y fecha."}
 </script>
 </head>
 <body>
 <a class="skip" href="#main">Saltar al contenido</a>
 
 <div class="topbar">
-  <p>peptalk es informativo: no reemplaza una consulta médica ni indica tratamientos. <a href="#metodo">Cómo trabajamos</a></p>
+  <p><span class="tb-txt">Información sobre péptidos, con fuente y fecha · no reemplaza una consulta médica</span><a class="tb-cta" href="#metodo">Cómo trabajamos<svg class="i" aria-hidden="true"><use href="assets/icons.svg#chevron-right"/></svg></a></p>
 </div>
 
 <header class="nav" id="nav">
@@ -47,6 +48,35 @@
     <button class="burger" id="burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="navLinks"><span></span><span></span></button>
   </div>
 </header>
+
+
+<!-- Barra flotante: aparece al bajar -->
+<div class="pillbar" id="pillbar" aria-hidden="true">
+  <div class="pill">
+    <nav class="pill-links" aria-label="Atajos">
+      <a href="#biblioteca">Péptidos</a>
+      <a href="#sistemas">Sistemas</a>
+      <a href="#estados">Estados</a>
+      <a href="#guias">Guías</a>
+    </nav>
+    <a href="#" class="pill-brand" aria-label="peptalk, volver arriba"><img src="brand/logo/peptalk-logo-white.svg" alt="peptalk" width="112" height="30"></a>
+    <div class="pill-actions">
+      <button class="pill-ic" type="button" id="pillSearch" aria-label="Buscar un péptido"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#search"/></svg></button>
+      <a href="#derivacion" class="pill-cta">Consultar</a>
+      <button class="pill-menu" type="button" id="pillMenu" aria-label="Abrir menú" aria-expanded="false" aria-controls="pillPanel"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#grip"/></svg></button>
+    </div>
+  </div>
+  <div class="pill-panel" id="pillPanel" hidden>
+    <a href="#biblioteca"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#flask-conical"/></svg><span><b>Biblioteca</b><small>Todos los péptidos y sus estados</small></span></a>
+    <a href="#sistemas"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#heart-pulse"/></svg><span><b>Sistemas del cuerpo</b><small>Explorá por zona</small></span></a>
+    <a href="#estados"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#scale"/></svg><span><b>Cómo leer los estados</b><small>ANMAT, FDA, EMA y WADA</small></span></a>
+    <a href="#novedades"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#newspaper"/></svg><span><b>Resumen semanal</b><small>Regulación e investigación</small></span></a>
+    <a href="#guias"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#book-open"/></svg><span><b>Guías</b><small>Para entender antes de preguntar</small></span></a>
+    <a href="#metodo"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#shield-check"/></svg><span><b>Metodología</b><small>Fuentes y verificación</small></span></a>
+    <a href="#derivacion"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#stethoscope"/></svg><span><b>Consultar con un especialista</b><small>Derivación sin costo</small></span></a>
+    <a href="https://x.com/Peptalkarg" target="_blank" rel="noopener"><svg class="i x-logo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span><b>@Peptalkarg</b><small>Seguinos en X</small></span></a>
+  </div>
+</div>
 
 <main id="main">
 
@@ -283,6 +313,7 @@
     <div class="foot-brand">
       <img src="brand/logo/peptalk-logo-white.svg" alt="peptalk" width="150" height="40" loading="lazy">
       <p>Información sobre péptidos, con fuentes y fechas.</p>
+      <div class="foot-social"><a href="https://x.com/Peptalkarg" target="_blank" rel="noopener" aria-label="peptalk en X"><svg class="i x-logo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>@Peptalkarg</span></a></div>
     </div>
     <div><h4>Biblioteca</h4><a href="#biblioteca">Péptidos</a><a href="#sistemas">Sistemas</a><a href="#estados">Estados por agencia</a></div>
     <div><h4>Aprender</h4><a href="#novedades">Novedades</a><a href="#guias">Guías</a><a href="#estados">Cómo leer la evidencia</a></div>
@@ -302,6 +333,6 @@
 </aside>
 
 <script src="data.js?v=908eb8fc"></script>
-<script src="app.js?v=9abd48ff"></script>
+<script src="app.js?v=e2744da1"></script>
 </body>
 </html>

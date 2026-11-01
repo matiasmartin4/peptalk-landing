@@ -181,9 +181,28 @@
     var setOpen = function (open) { links.classList.toggle('open', open); burger.setAttribute('aria-expanded', open); };
     burger.addEventListener('click', function () { setOpen(!links.classList.contains('open')); });
     links.addEventListener('click', function (e) { if (e.target.tagName === 'A') setOpen(false); });
-    window.addEventListener('scroll', function () { bar.classList.toggle('scrolled', window.scrollY > 8); }, { passive: true });
+    // barra flotante: aparece cuando la cabecera sale de pantalla
+    var pill = $('#pillbar'), menuBtn = $('#pillMenu'), panel = $('#pillPanel');
+    var setMenu = function (open) { panel.hidden = !open; menuBtn.setAttribute('aria-expanded', open); };
+    var onScroll = function () {
+      bar.classList.toggle('scrolled', window.scrollY > 8);
+      var show = window.scrollY > bar.offsetTop + bar.offsetHeight + 120;
+      if (show !== pill.classList.contains('show')) {
+        pill.classList.toggle('show', show);
+        pill.setAttribute('aria-hidden', !show);
+        pill.inert = !show;
+        if (!show) setMenu(false);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    menuBtn.addEventListener('click', function () { setMenu(panel.hidden); });
+    panel.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+    document.addEventListener('pointerdown', function (e) { if (!panel.hidden && !pill.contains(e.target)) setMenu(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) { setMenu(false); menuBtn.focus(); } });
+    $('#pillSearch').addEventListener('click', function () { $('#biblioteca').scrollIntoView(); setTimeout(function () { $('#libQ').focus({ preventScroll: true }); }, 450); });
 
-    var anchors = $$('a', links);
+    var anchors = $$('a', links).concat($$('.pill-links a'));
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
         if (!en.isIntersecting) return;
