@@ -54,6 +54,8 @@ Página: https://peptalkarg.com/admin/ (sin indexar). Sin conexión configurada 
 - Contactos: los formularios del sitio guardan con `pt_submit_lead`, la única función pública; el sitio no puede leer la tabla.
 - Historial: cada cambio en fichas, notas, documentos, borradores y contactos queda en `audit` con autor y fecha.
 - Publicar: el botón llama a la función `supabase/functions/publish`, que dispara `.github/workflows/publicar.yml`: baja las fichas publicadas (`scripts/db.py export`), corre `peptides.py` y `bust.py` y commitea. GitHub Pages redeploya solo.
+- Pantallas: catálogo y ficha (con imágenes y videos, resumen simple, especificaciones, uso y dosis), borradores, novedades, newsletter (editor tipo documento con Tiptap, `vendor/tiptap.min.js`, banner, secciones y vista previa del mail), contactos, revisión médica (el médico sólo ve la cola de dosis), usuarios y configuración (agencias y secciones visibles, tienda). `admin/admin.js` es el núcleo; `admin/media.js` y `admin/newsletter.js` se enganchan con `PTA.extend`.
+- Imágenes: se achican en el navegador (WebP, lado mayor 2000 px) antes de subir al bucket `media`.
 - Probar migraciones y permisos por rol (50 casos) en un Postgres local: `./scripts/test_db.sh`.
 
 Puesta en marcha (una vez):

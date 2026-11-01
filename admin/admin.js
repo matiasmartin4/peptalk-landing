@@ -3,7 +3,8 @@
    función "publish" que regenera el sitio. Sin URL en config.js, o con ?demo, corre en
    modo demo con las fichas actuales en memoria (nada se guarda).
 
-   Vistas (por hash): #catalogo · #p/<slug> · #borradores · #contactos · #usuarios */
+   Vistas (por hash): #catalogo · #p/<slug> · #borradores · #contactos · #dosis · #usuarios · #configuracion.
+   Otros módulos (media.js, newsletter.js) suman vistas y funciones de datos con PTA.extend. */
 (function () {
   'use strict';
 
@@ -26,8 +27,11 @@
     if (m < 1440) return `hace ${Math.round(m / 60)} h`;
     return fmtDate(d);
   };
+  // JSON con claves ordenadas: la base reordena las claves de los jsonb, así que comparar texto literal da falsos cambios
+  const stable = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x));
   const fmtSize = (b) => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
 
+  const AGENCIES = ['ANMAT', 'FDA', 'EMA', 'WADA'];   // el backoffice edita todas; el sitio muestra las de la configuración
   const ROLE_NAME = { admin: 'Admin', editor: 'Editor', medico: 'Médico', agente: 'Agente' };
   const SYS = Object.fromEntries(PT.systems.map((s) => [s.id, s.name]));
   const STATUS_CLS = Object.fromEntries(PT.statuses.map((s) => [s.v, s.cls]));
@@ -35,7 +39,14 @@
   const WADA_VALUES = ['Prohibido', 'No listado', 'Pendiente'];
   const TYPES = ['Péptido', 'Análogo peptídico', 'Polipéptido', 'Cosmético'];
   const LEAD_STATES = { nuevo: 'Nuevo', contactado: 'Contactado', derivado: 'Derivado', cerrado: 'Cerrado', baja: 'Baja' };
-  const FIELD_NAME = { name: 'Nombre', alias: 'Otros nombres', sys: 'Sistema', type: 'Tipo', ev: 'Evidencia', ev_note: 'Nota de evidencia', summary: 'Resumen', refs: 'Referencias', checked: 'Revisado el', status: 'Estados', published: 'Publicada', sort: 'Orden' };
+  const FIELD_NAME = {
+    name: 'Nombre', alias: 'Otros nombres', sys: 'Sistema', type: 'Tipo', tags: 'Etiquetas', ev: 'Evidencia', ev_note: 'Nota de evidencia',
+    summary: 'Resumen', summary_plain: 'Resumen simple', refs: 'Referencias', checked: 'Revisado el', status: 'Estados', published: 'Publicada',
+    usage_process: 'Proceso de uso', dosing: 'Dosis', dosing_reviewed_by: 'Revisión médica', cas_number: 'CAS', molecular_formula: 'Fórmula',
+    molecular_weight: 'Peso molecular', sequence: 'Secuencia', preparation_form: 'Presentación', storage: 'Conservación', sort: 'Orden'
+  };
+  const SPEC_FIELDS = [['cas_number', 'Número CAS'], ['molecular_formula', 'Fórmula molecular'], ['molecular_weight', 'Peso molecular (g/mol)'],
+    ['sequence', 'Secuencia'], ['preparation_form', 'Presentación'], ['storage', 'Conservación']];
   const options = (list, cur) => list.map((o) => {
     const [v, label] = Array.isArray(o) ? o : [o, o];
     return `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(label)}</option>`;
@@ -80,7 +91,7 @@
       onRecovery: (fn) => sb.auth.onAuthStateChange((ev) => { if (ev === 'PASSWORD_RECOVERY') fn(); }),
       async updatePassword(password) { const { error } = await sb.auth.updateUser({ password }); if (error) throw new Error(humanError(error)); },
 
-      peptides: () => q(sb.from('peptides').select('slug,name,alias,sys,type,ev,status,checked,published,updated_at').order('sort').order('name')),
+      peptides: () => q(sb.from('peptides').select('slug,name,alias,sys,type,ev,status,checked,published,updated_at,tags,summary,summary_plain').order('sort').order('name')),
       peptide: (slug) => q(sb.from('peptides').select('*').eq('slug', slug).single()),
       savePeptide: (slug, patch) => q(sb.from('peptides').update(patch).eq('slug', slug).select().single()),
       createPeptide: (row) => q(sb.from('peptides').insert(row).select().single()),
@@ -116,7 +127,14 @@
       async publish() {
         const { error } = await sb.functions.invoke('publish');
         if (error) throw new Error('No se pudo publicar. Probá de nuevo en un rato.');
-      }
+      },
+
+      settings: async () => Object.fromEntries((await q(sb.from('site_settings').select('key,value'))).map((r) => [r.key, r.value])),
+      saveSetting: (key, value) => q(sb.from('site_settings').update({ value }).eq('key', key)),
+      dosingQueue: () => q(sb.rpc('pt_dosing_queue')),
+      reviewDosing: (slug) => q(sb.rpc('pt_review_dosing', { peptide: slug })),
+
+      _sb: sb, _q: q, _uid: () => uid
     };
   };
 
@@ -135,10 +153,19 @@
     const who = (id) => { const p = people.find((x) => x.id === id); return p && { name: p.name, email: p.email, role: p.role }; };
     const pep = (window.PT.peptides || []).map((p, i) => ({
       slug: p.slug, name: p.name, alias: p.alias || '', sys: p.sys, type: p.type, ev: p.ev, ev_note: p.evNote || '', summary: p.summary,
-      status: p.status, refs: p.refs || [], checked: p.checked, published: true, sort: i, updated_at: ago(48)
+      status: p.status, refs: p.refs || [], checked: p.checked, published: true, sort: i, updated_at: ago(48), tags: [], summary_plain: '',
+      usage_process: '', dosing: '', dosing_reviewed_by: null, dosing_reviewed_at: null, cas_number: null, molecular_formula: null,
+      molecular_weight: null, sequence: null, preparation_form: null, storage: null
     }));
     const find = (slug) => pep.find((p) => p.slug === slug);
     const notes = [], docs = [], audit = [];
+    const settings = {
+      agencias_visibles: ['ANMAT', 'FDA'],
+      secciones: { resumen_simple: false, imagenes: false, videos: false, especificaciones: false, uso: false, dosis: false },
+      tienda: { activa: false, moneda: 'ARS', aviso: '', envio: '', entrega: '', edad_minima: 18 }
+    };
+    // la demo tiene una dosis cargada para ver el circuito de revisión médica
+    Object.assign(find('bpc-157') || {}, { usage_process: 'Ejemplo de demo: texto del proceso de uso.', dosing: 'Ejemplo de demo: texto de dosis a revisar.' });
     const drafts = [
       { id: 'd1', slug: 'bpc-157', kind: 'nota', state: 'pendiente', author: 'u-grok', created_at: ago(3), source_url: 'https://pubmed.ncbi.nlm.nih.gov/',
         reason: 'Ejemplo de demo', payload: { body: 'Ejemplo de demo: así se ve una nota que propone Grok. Al aprobarla queda en la ficha como nota interna, con Grok como autor.' } },
@@ -166,7 +193,13 @@
 
       peptides: () => ok(pep),
       peptide: (slug) => find(slug) ? ok(find(slug)) : fail('No existe esa ficha.'),
-      savePeptide(slug, patch) { const p = find(slug), old = clone(p); Object.assign(p, patch, { updated_at: now() }); log(slug, 'update', old, p); return ok(p); },
+      savePeptide(slug, patch) {
+        const p = find(slug), old = clone(p);
+        Object.assign(p, patch, { updated_at: now() });
+        if (p.dosing !== old.dosing) Object.assign(p, { dosing_reviewed_by: null, dosing_reviewed_at: null });
+        log(slug, 'update', old, p);
+        return ok(p);
+      },
       createPeptide(row) {
         if (find(row.slug)) return fail('Ya existe una ficha con ese identificador.');
         const p = Object.assign({ alias: '', ev: '—', ev_note: '', summary: '', refs: [], checked: now().slice(0, 10), sort: 1000, updated_at: now() }, row);
@@ -204,7 +237,13 @@
         Object.assign(people.find((p) => p.id === id), patch); return ok();
       },
 
-      publish: () => ok()
+      publish: () => ok(),
+      settings: () => ok(settings),
+      saveSetting(key, value) { if (me.role !== 'admin') return fail('No tenés permiso para hacer esto.'); settings[key] = value; return ok(); },
+      dosingQueue: () => ok(pep.filter((p) => p.dosing).map((p) => ({ slug: p.slug, name: p.name, usage_process: p.usage_process, dosing: p.dosing,
+        reviewed_by_me: p.dosing_reviewed_by === me.id, reviewed_at: p.dosing_reviewed_at, updated_at: p.updated_at }))),
+      reviewDosing(slug) { Object.assign(find(slug), { dosing_reviewed_by: me.id, dosing_reviewed_at: now() }); return ok(); },
+      _demo: { people, pep, find, ok, fail, now, ago, me: () => me }
     };
   };
 
@@ -272,11 +311,13 @@
     $('#meRole').textContent = ROLE_NAME[me.role] + (DEMO ? ' · demo' : '');
     $$('#nav a').forEach((a) => { a.hidden = !a.dataset.roles.split(' ').includes(me.role); });
     people = can('admin', 'editor') ? await api.profiles().catch(() => []) : [me];
+    PTA.settings = can('admin', 'editor', 'agente') ? await api.settings().catch(() => ({})) : {};
     refreshCount();
     route();
   }
 
   async function refreshCount() {
+    PTA.hooks.count.forEach((fn) => fn());
     if (!can('admin', 'editor', 'agente')) return;
     const n = await api.draftCount().catch(() => 0);
     const b = $('#draftCount');
@@ -297,9 +338,11 @@
     }
     dirty = null;
     const [name, arg] = (location.hash.slice(1) || home()).split('/');
-    const section = name === 'p' ? 'catalogo' : name;
-    const view = { catalogo: viewCatalog, p: viewPeptide, borradores: viewDrafts, contactos: viewLeads, usuarios: viewUsers }[name];
-    if (!view || !allowed(section) || (name === 'p' && !arg)) { location.replace('#' + home()); return; }
+    const views = Object.assign({ catalogo: viewCatalog, p: viewPeptide, borradores: viewDrafts, contactos: viewLeads, dosis: viewDosing,
+      usuarios: viewUsers, configuracion: viewSettings }, PTA.views);
+    const section = PTA.sections[name] || (name === 'p' ? 'catalogo' : name);
+    const view = views[name];
+    if (!view || !allowed(section) || (PTA.sections[name] || name === 'p') && !arg) { location.replace('#' + home()); return; }
     current = location.hash || '#' + home();
     $$('#nav a').forEach((a) => { if (a.dataset.view === section) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     const el = $('#view');
@@ -316,16 +359,20 @@
     finally { btn.disabled = false; }
   }
 
-  const dotsFor = (status) => `<span class="dots">${PT.agencies.map((a) => {
+  const dotsFor = (status) => `<span class="dots">${AGENCIES.map((a) => {
     const v = (status[a] || {}).v || 'Pendiente';
     return `<span class="dot ${STATUS_CLS[v]}" title="${a}: ${esc(v)}"></span>`;
   }).join('')}</span>`;
   const evBadge = (ev) => `<span class="ev${ev === '—' ? ' none' : ''}" title="Evidencia ${esc(ev)}">${esc(ev)}</span>`;
 
+  // si una sección de la ficha sale o no en el sitio (site_settings.secciones)
+  const visTag = (key) => (PTA.settings.secciones || {})[key]
+    ? '<span class="tag ok">Visible en el sitio</span>' : '<span class="tag">Oculto en el sitio</span>';
+
   /* ---------- catálogo ---------- */
   async function viewCatalog(el) {
     const rows = await api.peptides();
-    const pendings = (p) => PT.agencies.filter((a) => ((p.status[a] || {}).v || 'Pendiente') === 'Pendiente').length;
+    const pendings = (p) => AGENCIES.filter((a) => ((p.status[a] || {}).v || 'Pendiente') === 'Pendiente').length;
     el.innerHTML = `
       <header class="head">
         <div><h1>Catálogo</h1><p>${rows.length} fichas · ${rows.filter((r) => r.published).length} publicadas en el sitio</p></div>
@@ -381,7 +428,7 @@
     nf.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!f.name.value.trim() || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(f.slug.value)) { toast('Completá el nombre y un identificador válido (minúsculas y guiones).', true); return; }
-      const status = Object.fromEntries(PT.agencies.map((a) => [a, { v: 'Pendiente' }]));
+      const status = Object.fromEntries(AGENCIES.map((a) => [a, { v: 'Pendiente' }]));
       try {
         const p = await api.createPeptide({ slug: f.slug.value, name: f.name.value.trim(), sys: f.sys.value, type: f.type.value, status, published: false });
         location.hash = 'p/' + p.slug;
@@ -412,6 +459,7 @@
               <label class="field"><span>Sistema</span><select name="sys"${dis}>${options(PT.systems.map((s) => [s.id, s.name]), p.sys)}</select></label>
               <label class="field"><span>Tipo</span><select name="type"${dis}>${options(TYPES, p.type)}</select></label>
             </div>
+            <label class="field"><span>Etiquetas <em>(separadas por coma; por ejemplo: nuevo, destacado)</em></span><input type="text" name="tags"${dis}></label>
           </div></section>
           <section class="card"><h2>Resumen y evidencia</h2><div class="stack">
             <label class="field"><span>Resumen <em>(lo que se lee en la ficha del sitio)</em></span><textarea name="summary" rows="6"${dis}></textarea></label>
@@ -421,8 +469,11 @@
               <label class="field"><span>Revisado el</span><input type="date" name="checked"${dis}></label>
             </div>
           </div></section>
+          <section class="card"><h2>En pocas palabras ${visTag('resumen_simple')}</h2>
+            <label class="field"><span>Resumen simple <em>(para cualquier persona, sin tecnicismos)</em></span><textarea name="summary_plain" rows="3"${dis}></textarea></label>
+          </section>
           <section class="card"><h2>Estado regulatorio <small>Todo estado confirmado lleva link a la fuente</small></h2><div class="stack" id="agencies">
-            ${PT.agencies.map((a) => `
+            ${AGENCIES.map((a) => `
               <div class="agency" data-ag="${a}">
                 <div class="agency-head"><span class="dot"></span>${a} <small>${esc(PT.agencyInfo[a].name)}</small>
                   <select data-k="v" aria-label="Estado en ${a}"${dis}>${options(a === 'WADA' ? WADA_VALUES : VALUES, (p.status[a] || {}).v || 'Pendiente')}</select></div>
@@ -434,9 +485,20 @@
               </div>`).join('')}
           </div></section>
           <section class="card"><h2>Referencias <small id="refCount"></small>${edit ? `<button class="btn sm" type="button" id="addRef">${icon('plus')}Agregar</button>` : ''}</h2><div class="stack" id="refs"></div></section>
+          <section class="card"><h2>Especificaciones ${visTag('especificaciones')}</h2>
+            <div class="grid2">${SPEC_FIELDS.map(([k, label]) => `<label class="field"><span>${label}</span><input type="text" name="${k}"${dis}></label>`).join('')}</div>
+          </section>
+          <section class="card"><h2>Uso y dosis ${visTag('uso')}</h2>
+            <div class="stack">
+              <label class="field"><span>Proceso de uso</span><textarea name="usage_process" rows="4"${dis}></textarea></label>
+              <label class="field"><span>Dosis de referencia ${visTag('dosis')}</span><textarea name="dosing" rows="3"${dis}></textarea></label>
+              <p class="hint" id="dosingState"></p>
+            </div>
+          </section>
           <div class="savebar" id="savebar" hidden><span>Tenés cambios sin guardar.</span><button class="btn" type="button" id="discard">Descartar</button><button class="btn accent" type="submit">Guardar</button></div>
         </form>
         <aside class="side-col">
+          <section class="card" id="mediaCard"></section>
           <section class="card"><h2>Notas <small>internas</small></h2>
             ${edit ? `<form id="noteForm" class="stack" style="margin-bottom:14px">
               <textarea name="body" rows="3" placeholder="Novedad, duda, algo para revisar…" aria-label="Nota nueva"></textarea>
@@ -451,7 +513,16 @@
       </div>`;
 
     const form = $('#pepForm');
-    ['name', 'alias', 'summary', 'ev_note', 'checked'].forEach((k) => { form.elements[k].value = p[k] || ''; });
+    ['name', 'alias', 'summary', 'summary_plain', 'ev_note', 'checked', 'usage_process', 'dosing'].concat(SPEC_FIELDS.map((f) => f[0]))
+      .forEach((k) => { form.elements[k].value = p[k] == null ? '' : p[k]; });
+    form.elements.tags.value = (p.tags || []).join(', ');
+    const drawDosing = () => {
+      $('#dosingState').innerHTML = !p.dosing ? 'La dosis se publica sólo si un médico la revisa con su usuario. Si se cambia, la revisión se pierde.'
+        : p.dosing_reviewed_by ? `${icon('steth')} Revisada por ${esc(personName(p.dosing_reviewed_by))} · ${fmtDate(p.dosing_reviewed_at)}`
+        : `${icon('steth')} Sin revisión médica: no se publica hasta que un médico la revise.`;
+    };
+    drawDosing();
+    if (PTA.mountMedia) PTA.mountMedia($('#mediaCard'), slug, edit);
     $$('.agency', form).forEach((box) => {
       const s = p.status[box.dataset.ag] || {};
       ['source', 'url', 'note'].forEach((k) => { $(`[data-k="${k}"]`, box).value = s[k] || ''; });
@@ -471,6 +542,12 @@
     const collect = () => ({
       name: form.elements.name.value.trim(), alias: form.elements.alias.value.trim(), sys: form.elements.sys.value, type: form.elements.type.value,
       summary: form.elements.summary.value.trim(), ev_note: form.elements.ev_note.value.trim(), ev: form.elements.ev.value,
+      summary_plain: form.elements.summary_plain.value.trim(), usage_process: form.elements.usage_process.value.trim(), dosing: form.elements.dosing.value.trim(),
+      tags: [...new Set(form.elements.tags.value.split(',').map((t) => slugify(t)).filter(Boolean))],
+      ...Object.fromEntries(SPEC_FIELDS.map(([k]) => {
+        const v = form.elements[k].value.trim();
+        return [k, !v ? null : k === 'molecular_weight' ? Number(v.replace(',', '.')) : v];
+      })),
       checked: form.elements.checked.value || p.checked, published: form.elements.published.checked,
       status: Object.fromEntries($$('.agency', form).map((box) => {
         const s = Object.assign({}, p.status[box.dataset.ag] || {});
@@ -485,6 +562,8 @@
       $$('[aria-invalid]', form).forEach((i) => i.removeAttribute('aria-invalid'));
       const bad = (input, msg) => { input.setAttribute('aria-invalid', 'true'); errs.push(msg); };
       if (!form.elements.name.value.trim()) bad(form.elements.name, 'Falta el nombre.');
+      const mw = form.elements.molecular_weight.value.trim();
+      if (mw && !(Number(mw.replace(',', '.')) > 0)) bad(form.elements.molecular_weight, 'El peso molecular tiene que ser un número.');
       $$('.agency', form).forEach((box) => {
         const url = $('[data-k="url"]', box);
         if ($('[data-k="v"]', box).value !== 'Pendiente' && !isUrl(url.value.trim())) bad(url, `${box.dataset.ag}: un estado confirmado necesita el link a la fuente.`);
@@ -513,6 +592,7 @@
         try {
           const saved = await api.savePeptide(slug, collect());
           Object.assign(p, saved);
+          drawDosing();
           base = JSON.stringify(collect());
           sync();
           toast(saved.published ? 'Guardado. Tocá "Publicar en el sitio" para que se vea.' : 'Guardado.');
@@ -582,7 +662,7 @@
     const drawHist = (list) => {
       $('#hist').innerHTML = list.length ? list.map((h) => {
         const keys = h.action === 'update' && h.old && h.new
-          ? Object.keys(FIELD_NAME).filter((k) => JSON.stringify(h.old[k]) !== JSON.stringify(h.new[k])).map((k) => FIELD_NAME[k]) : [];
+          ? Object.keys(FIELD_NAME).filter((k) => stable(h.old[k]) !== stable(h.new[k])).map((k) => FIELD_NAME[k]) : [];
         const what = h.action === 'insert' ? 'creó la ficha' : h.action === 'delete' ? 'borró la ficha' : keys.length ? 'cambió ' + keys.join(', ').toLowerCase() : 'guardó sin cambios';
         return `<div><b>${esc(personName(h.actor))}</b><span>${esc(what)} · ${fmtWhen(h.at)}</span></div>`;
       }).join('') : '<span class="muted">Sin cambios registrados desde que se cargó.</span>';
@@ -743,6 +823,93 @@
     });
   }
 
+  /* ---------- revisión médica (sólo médicos) ---------- */
+  async function viewDosing(el) {
+    const list = await api.dosingQueue();
+    el.innerHTML = `
+      <header class="head"><div><h1>Revisión médica</h1><p>Dosis cargadas en las fichas. Una dosis sólo se publica si la revisa un médico; si alguien la cambia, vuelve a esta lista.</p></div></header>
+      <div class="drafts">${list.length ? list.map((d) => `
+        <article class="draft" data-slug="${esc(d.slug)}">
+          <div class="draft-head"><h3>${esc(d.name)}</h3>
+            ${d.reviewed_at ? `<span class="tag ok">Revisada${d.reviewed_by_me ? ' por vos' : ''} · ${fmtDate(d.reviewed_at)}</span>` : '<span class="tag warn">Sin revisar</span>'}
+            <time>${fmtWhen(d.updated_at)}</time></div>
+          ${d.usage_process ? `<div><small class="muted">Proceso de uso</small><div class="draft-body">${esc(d.usage_process)}</div></div>` : ''}
+          <div><small class="muted">Dosis</small><div class="draft-body">${esc(d.dosing)}</div></div>
+          ${d.reviewed_at ? '' : '<div class="draft-actions"><span class="muted" style="flex:1;font-size:12px">Al marcarla, queda tu nombre y la fecha como revisión.</span><button class="btn accent" type="button" data-review>Marcar como revisada</button></div>'}
+        </article>`).join('') : '<div class="card empty">No hay dosis para revisar.</div>'}</div>`;
+    el.querySelector('.drafts').addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-review]');
+      if (!b) return;
+      b.disabled = true;
+      try { await api.reviewDosing(b.closest('[data-slug]').dataset.slug); toast('Dosis marcada como revisada.'); viewDosing(el); }
+      catch (err) { toast(err.message, true); b.disabled = false; }
+    });
+  }
+
+  /* ---------- configuración del sitio (sólo admin) ---------- */
+  const SECTIONS = [
+    ['resumen_simple', 'Resumen simple', '"En pocas palabras" en la ficha.'],
+    ['imagenes', 'Imágenes', 'Portada y galería de cada ficha.'],
+    ['videos', 'Videos', 'Videos enlazados (YouTube, Vimeo).'],
+    ['especificaciones', 'Especificaciones', 'CAS, fórmula, peso molecular, secuencia, presentación y conservación.'],
+    ['uso', 'Proceso de uso', 'Cómo es el uso, explicado.'],
+    ['dosis', 'Dosis', 'Sólo las que revisó un médico. Conviene consultarlo con un abogado antes de activarla.']
+  ];
+  async function viewSettings(el) {
+    const st = PTA.settings = await api.settings();
+    const sec = Object.assign({}, st.secciones), shop = Object.assign({}, st.tienda);
+    el.innerHTML = `
+      <header class="head"><div><h1>Configuración</h1><p>Qué muestra el sitio. Los cambios se ven después de tocar "Publicar en el sitio".</p></div></header>
+      <section class="card"><h2>Agencias en las fichas</h2>
+        <p class="hint" style="margin-top:-6px">Las fichas guardan las cuatro; acá elegís cuáles se muestran.</p>
+        <div class="checks" id="ags">${AGENCIES.map((a) => `<label class="switch"><input type="checkbox" value="${a}"${(st.agencias_visibles || []).includes(a) ? ' checked' : ''}>${a} <small class="muted">${esc(PT.agencyInfo[a].name)}</small></label>`).join('')}</div>
+      </section>
+      <section class="card"><h2>Secciones de la ficha</h2>
+        <div class="setting-list" id="secs">${SECTIONS.map(([k, label, desc]) => `
+          <label class="setting"><span><b>${label}</b><small>${desc}</small></span><span class="switch"><input type="checkbox" data-k="${k}"${sec[k] ? ' checked' : ''}></span></label>`).join('')}</div>
+      </section>
+      <section class="card"><h2>Tienda <span class="tag">Apagada</span></h2>
+        <p class="hint" style="margin-top:-6px">Los productos, precios y certificados se pueden cargar, pero no se muestran. Se activa cuando haya autorización para vender en Argentina.</p>
+        <div class="grid2">
+          <label class="field"><span>Moneda</span><select name="moneda">${options([['ARS', 'Pesos (ARS)'], ['USD', 'Dólares (USD)']], shop.moneda)}</select></label>
+          <label class="field"><span>Edad mínima para comprar</span><input type="text" name="edad_minima" value="${esc(shop.edad_minima)}"></label>
+          <label class="field"><span>Envío</span><textarea name="envio" rows="2">${esc(shop.envio)}</textarea></label>
+          <label class="field"><span>Plazo de entrega</span><textarea name="entrega" rows="2">${esc(shop.entrega)}</textarea></label>
+        </div>
+        <label class="field" style="margin-top:12px"><span>Aviso legal del producto</span><textarea name="aviso" rows="2">${esc(shop.aviso)}</textarea></label>
+      </section>
+      <div class="toolbar" style="justify-content:flex-end;margin-top:16px"><button class="btn primary" type="button" id="saveSettings">Guardar configuración</button></div>`;
+    $('#saveSettings').addEventListener('click', async (e) => {
+      const ags = $$('#ags input:checked').map((i) => i.value);
+      if (!ags.length) { toast('Elegí al menos una agencia.', true); return; }
+      $$('#secs input').forEach((i) => { sec[i.dataset.k] = i.checked; });
+      ['moneda', 'envio', 'entrega', 'aviso'].forEach((k) => { shop[k] = $(`[name="${k}"]`, el).value.trim(); });
+      shop.edad_minima = parseInt($('[name="edad_minima"]', el).value, 10) || 18;
+      e.currentTarget.disabled = true;
+      try {
+        await api.saveSetting('agencias_visibles', ags);
+        await api.saveSetting('secciones', sec);
+        await api.saveSetting('tienda', shop);
+        PTA.settings = await api.settings();
+        toast('Guardado. Tocá "Publicar en el sitio" para aplicarlo.');
+      } catch (err) { toast(err.message, true); }
+      finally { e.currentTarget.disabled = false; }
+    });
+  }
+
+  /* ---------- módulos: media.js y newsletter.js se enganchan acá ---------- */
+  const extensions = [];
+  window.PTA = {
+    DEMO, AGENCIES, SYS, $, $$, esc, icon, clone, isUrl, slugify, fmtDate, fmtWhen, fmtSize, options, toast, can, authorTag, personName,
+    settings: {}, views: {}, sections: {}, hooks: { count: [] },
+    get api() { return api; },
+    get me() { return me; },
+    setDirty: (fn) => { dirty = fn; },
+    rerender: () => { dirty = null; route(); },
+    // cada módulo agrega funciones de datos para Supabase y para la demo
+    extend: (ext) => extensions.push(ext)
+  };
+
   /* ---------- arranque ---------- */
   $('#logout').addEventListener('click', async () => {
     if (dirty && dirty()) { toast('Guardá o descartá los cambios antes de salir.', true); return; }
@@ -754,11 +921,13 @@
     showLogin();
   });
 
-  (async () => {
+  // espera a que carguen los módulos (están después de este script)
+  document.addEventListener('DOMContentLoaded', async () => {
     if (DEMO) await loadScript('../peptides.js');
     api = DEMO ? demoApi() : supabaseApi();
+    extensions.forEach((ext) => Object.assign(api, DEMO ? ext.demo(api._demo) : ext.real({ sb: api._sb, q: api._q, uid: api._uid, cfg })));
     initLogin();
     try { await enter(await api.session()); }
     catch (err) { showLogin(err.message); }
-  })();
+  });
 })();

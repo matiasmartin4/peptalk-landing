@@ -204,3 +204,107 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .grid2, .grid3, .ref-row { grid-template-columns: 1fr; }
   .toolbar input[type=search] { width: 100%; }
 }
+
+/* ---------- ficha: textos de ayuda ---------- */
+.hint { margin: 0; font-size: 12px; color: var(--pt-text-muted); display: flex; align-items: center; gap: 6px; }
+.card h2 .tag { font-size: 11px; }
+
+/* ---------- imágenes y videos ---------- */
+.gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.thumb { margin: 0; display: grid; gap: 6px; position: relative; }
+.thumb img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; border: 1px solid var(--pt-border); background: var(--pt-surface-muted); }
+.thumb.cover img { outline: 2px solid var(--pt-color-brand-orange); outline-offset: 1px; }
+.thumb > .tag { position: absolute; top: 6px; left: 6px; }
+.thumb-actions { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+.thumb:hover .thumb-actions, .thumb:focus-within .thumb-actions { opacity: 1; }
+.thumb-actions .btn { width: 28px; height: 28px; background: rgba(255,255,255,.92); }
+.thumb input { height: 30px; font-size: 12px; border-radius: 8px; }
+.videos { display: grid; gap: 8px; margin-top: 12px; }
+.video-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.video-row img, .video-ph { width: 72px; height: 40px; flex: none; border-radius: 6px; object-fit: cover; background: var(--pt-surface-muted); display: grid; place-items: center; }
+.video-row > div { flex: 1; min-width: 0; display: grid; }
+.video-row a { text-decoration: none; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.video-row small { color: var(--pt-text-muted); font-size: 12px; }
+.video-add { display: grid; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--pt-border); }
+.video-add .btn { justify-self: end; }
+
+/* ---------- configuración ---------- */
+.checks { display: flex; gap: 18px; flex-wrap: wrap; }
+.setting-list { display: grid; }
+.setting { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--pt-border); cursor: pointer; }
+.setting:first-child { border-top: 0; padding-top: 0; }
+.setting > span:first-child { display: grid; gap: 2px; }
+.setting b { font-size: 14px; }
+.setting small { font-size: 12px; color: var(--pt-text-muted); }
+
+/* ---------- novedades ---------- */
+.news-item { grid-template-columns: 1fr; }
+.news-img { width: 100%; max-height: 180px; object-fit: cover; border-radius: 10px; }
+.pick { max-height: 180px; overflow: auto; border: 1px solid var(--pt-border); border-radius: 10px; padding: 6px 10px; display: grid; gap: 2px; font-size: 13px; }
+.pick label { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
+.banner-prev { display: grid; gap: 8px; }
+.banner-prev img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; border: 1px solid var(--pt-border); }
+.banner-prev > div { display: flex; gap: 8px; }
+.banner-prev.wide img { aspect-ratio: 3 / 1; max-height: none; }
+label.btn { cursor: pointer; }
+
+/* ---------- newsletter: editor ---------- */
+.issue-grid { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 20px; align-items: start; }
+.issue-grid > div > .card + .card { margin-top: 16px; }
+.head .actions select { width: auto; }
+.rt-toolbar { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px; margin-bottom: 8px; border: 1px solid var(--pt-border); border-radius: 10px; background: var(--pt-surface-muted); position: sticky; top: 8px; z-index: 3; }
+.rt-toolbar button { min-width: 32px; height: 32px; padding: 0 8px; border: 0; border-radius: 8px; background: none; font-size: 12px; font-weight: 700; color: var(--pt-text-muted); cursor: pointer; display: grid; place-items: center; }
+.rt-toolbar button:hover { background: var(--pt-surface); color: var(--pt-text); }
+.rt-toolbar button[aria-pressed=true] { background: var(--pt-surface); color: var(--pt-color-support-rust, #B34700); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.rt-toolbar .sep { width: 1px; margin: 6px 4px; background: var(--pt-border); }
+.rt-link { display: flex; gap: 6px; margin-bottom: 8px; }
+.rt { min-height: 260px; padding: 14px 16px; border: 1px solid var(--pt-border); border-radius: 12px; background: var(--pt-surface); }
+.rt:focus-within { border-color: var(--pt-color-brand-orange); box-shadow: 0 0 0 3px rgba(255, 106, 0, .15); }
+.rt .tiptap { outline: none; min-height: 230px; font-size: 15px; line-height: 1.6; }
+.rt .tiptap > * + * { margin-top: .7em; }
+.rt .tiptap p { margin: 0; }
+.rt .tiptap h2 { font-size: 22px; letter-spacing: -.02em; margin: 1em 0 .3em; line-height: 1.2; }
+.rt .tiptap h3 { font-size: 17px; margin: .9em 0 .2em; }
+.rt .tiptap img { max-width: 100%; height: auto; border-radius: 10px; display: block; }
+.rt .tiptap img.ProseMirror-selectednode { outline: 3px solid var(--pt-color-brand-orange); }
+.rt .tiptap blockquote { margin: 0; padding-left: 14px; border-left: 3px solid var(--pt-color-brand-orange); color: var(--pt-text-muted); }
+.rt .tiptap hr { border: 0; border-top: 1px solid var(--pt-border); margin: 1.2em 0; }
+.rt .tiptap a { color: var(--pt-color-support-rust, #B34700); }
+.rt .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #A8A29E; float: left; height: 0; pointer-events: none; }
+.item { display: grid; gap: 6px; padding: 12px; border: 1px solid var(--pt-border); border-radius: 12px; }
+.item-head { display: flex; align-items: center; gap: 8px; }
+.item-head b { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-tools { display: flex; gap: 2px; }
+.item input, .item textarea { font-size: 13px; }
+.item-add { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+
+/* vista previa del mail */
+.preview-col { position: sticky; top: 20px; }
+.preview-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: var(--pt-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.mail { background: #EFEBE6; border-radius: 16px; padding: 12px; max-height: calc(100vh - 80px); overflow: auto; }
+.mail-inbox { display: grid; gap: 2px; padding: 10px 12px; margin-bottom: 10px; background: var(--pt-surface); border-radius: 10px; font-size: 12px; }
+.mail-inbox span { color: var(--pt-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mail-sheet { background: #fff; border-radius: 12px; overflow: hidden; font-size: 14px; line-height: 1.6; color: #1A1A1A; }
+.mail-logo { padding: 18px 22px 14px; }
+.mail-banner { display: block; width: 100%; aspect-ratio: 3 / 1; object-fit: cover; }
+.mail-body { padding: 18px 22px 6px; }
+.mail-body > * + * { margin-top: .7em; }
+.mail-body p { margin: 0; }
+.mail-body h2 { font-size: 20px; line-height: 1.25; margin: .8em 0 .2em; letter-spacing: -.02em; }
+.mail-body h3 { font-size: 16px; margin: .8em 0 .2em; }
+.mail-body img { max-width: 100%; height: auto; border-radius: 8px; }
+.mail-body blockquote { margin: 0; padding-left: 12px; border-left: 3px solid #FF6A00; color: #6B6B6B; }
+.mail-body a { color: #B34700; }
+.mail-cards { display: grid; gap: 10px; padding: 14px 22px 4px; }
+.mail-card { padding: 14px 16px; border: 1px solid #ECE7E1; border-radius: 12px; background: #FFFAF5; }
+.mail-card small { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #B34700; }
+.mail-card h4 { margin: 2px 0 4px; font-size: 15px; line-height: 1.3; }
+.mail-card p { margin: 0 0 6px; font-size: 13px; color: #4A4A4A; }
+.mail-card a { font-size: 13px; font-weight: 600; color: #1A1A1A; }
+.mail-foot { margin-top: 16px; padding: 16px 22px 20px; border-top: 1px solid #F0ECE7; font-size: 11px; color: #8A8A8A; text-align: center; line-height: 1.6; }
+
+@media (max-width: 1200px) {
+  .issue-grid { grid-template-columns: 1fr; }
+  .preview-col { position: static; }
+  .mail { max-height: none; }
+}

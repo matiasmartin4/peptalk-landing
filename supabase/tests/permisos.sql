@@ -121,3 +121,10 @@ select t('cambiar la dosis borra la revisión médica', (select dosing_reviewed_
 \echo '— historial'
 select t('historial registra autor de los cambios', (select count(*) from audit where tbl='peptides' and actor='00000000-0000-0000-0000-00000000000e') >= 1);
 select t('historial registra la configuración', (select count(*) from audit where tbl='site_settings') >= 1);
+
+\echo '— revisión médica'
+set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000d';
+select t('médico ve la cola de dosis', (select count(*) from pt_dosing_queue()) = 1);
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000e';
+select t('editor no usa la cola médica', (select count(*) from pt_dosing_queue()) = 0);
+reset role;
