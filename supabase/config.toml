@@ -197,7 +197,7 @@ password_requirements = ""
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2
+email_sent = 60
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -415,9 +415,24 @@ enabled = true
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
 
-# Mails en castellano: supabase/templates/magic_link.html e invite.html. Supabase no deja
-# cambiar las plantillas en el plan gratis con su correo propio; se activan cuando se
-# conecte un SMTP (p. ej. Resend) agregando acá [auth.email.template.magic_link] e [.invite].
+# Mails por Resend (SMTP). La clave vive en ~/.peptalk-resend-key, fuera del repo:
+# se aplica con ./scripts/smtp_push.sh, que la pasa como RESEND_API_KEY a `supabase config push`.
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "no-responder@peptalkarg.com"
+sender_name = "peptalk"
+
+[auth.email.template.magic_link]
+subject = "Tu link para entrar a peptalk"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.invite]
+subject = "Te invitaron al backoffice de peptalk"
+content_path = "./supabase/templates/invite.html"
 
 # el MCP de agentes se autentica con su propio token (ptk_…), no con un JWT de Supabase
 [functions.mcp]
