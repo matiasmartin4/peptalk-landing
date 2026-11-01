@@ -1,9 +1,9 @@
 {
   "name": "peptalk-react",
   "private": true,
-  "description": "Piezas en React del sitio (se compilan a react/dist; el sitio sigue siendo estático).",
+  "description": "Piezas en React del sitio (se compilan a react/dist; el sitio sigue siendo est\u00e1tico).",
   "scripts": {
-    "build": "esbuild src/hero.tsx --bundle --minify --format=iife --target=es2019 --jsx=automatic --define:process.env.NODE_ENV=\\\"production\\\" --outfile=dist/hero.js",
+    "build": "esbuild src/hero.tsx src/lab/cards.tsx --bundle --minify --format=iife --target=es2019 --jsx=automatic --define:process.env.NODE_ENV=\\\"production\\\" --outdir=dist --entry-names=[name]",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
