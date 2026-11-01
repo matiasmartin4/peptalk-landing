@@ -1,7 +1,7 @@
 /* peptalk — lógica de la landing.
    Módulos: util · catalog · ui (íconos, estados, evidencia) · select · nav · search · spot ·
    systems · library · legend · drawer · forms · reveal.
-   Sin dependencias. El contenido sale de data.js (window.PT); el cuerpo 3D, de body3d.js + Three.js r149. */
+   Sin dependencias. El contenido sale de data.js (window.PT); el cuerpo 3D, de body3d.js?v=6a2ece6a + Three.js r149. */
 (function () {
   'use strict';
 
@@ -312,7 +312,7 @@
       });
     };
     var boot = function () {
-      loadScript('vendor/three.min.js').then(function () { return loadScript('body3d.js'); }).then(function () {
+      loadScript('vendor/three.min.js').then(function () { return loadScript('body3d.js?v=6a2ece6a'); }).then(function () {
         stage.innerHTML = '';
         body = window.PTBody.mount(stage, PT.systems, { onPick: select });
         if (!body) throw new Error('sin WebGL');
