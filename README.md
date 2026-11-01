@@ -69,3 +69,13 @@ Puesta en marcha (una vez):
 2. Poner la URL y la clave anon en `admin/config.js` y en `data.js` (`supabase`).
 3. Invitar a los usuarios desde Authentication → Users; al primero hacerlo admin con `update profiles set role = 'admin', active = true where email = '…';`.
 4. Publicación: secretos `SUPABASE_URL` y `SUPABASE_SERVICE_KEY` en GitHub (Settings → Secrets → Actions); en Supabase, desplegar la función `publish` con los secretos `GITHUB_TOKEN` (fine-grained, Contents: write) y `GITHUB_REPO=matiasmartin4/peptalk-landing`.
+
+## Grok por MCP (`supabase/functions/mcp`)
+
+Servidor MCP por HTTP, sin sesión, en `https://ksclxrhwaeddlxrdnfxi.supabase.co/functions/v1/mcp`.
+
+- **Entrada:** `Authorization: Bearer ptk_…`. Los tokens se generan y revocan en Usuarios → Conexión de Grok (sólo admin). En la base queda el hash; el token se ve una sola vez.
+- **Identidad:** cada llamada corre como el usuario agente dueño del token (rol `authenticated` con su `sub`), así que valen las mismas reglas que en el backoffice. Un agente desactivado o un token revocado dejan de entrar en el acto.
+- **Herramientas:** `buscar_peptidos`, `leer_ficha`, `referencia`, `proponer_nota`, `proponer_cambio`, `proponer_peptido_nuevo`, `proponer_novedad`, `mis_propuestas`. Todo lo que escribe queda como propuesta en Borradores o Novedades; la dosis y la publicación no se pueden proponer.
+- **Deploy:** `supabase functions deploy mcp --project-ref ksclxrhwaeddlxrdnfxi --use-api --no-verify-jwt` (el token no es un JWT de Supabase).
+- **Conectar Grok:** en la API de xAI se pasa como herramienta MCP remota con la URL de arriba y el token como `authorization`. Cualquier otro cliente MCP (Claude, Cursor) se conecta igual.

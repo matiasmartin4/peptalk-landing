@@ -133,6 +133,12 @@
       profiles: () => q(sb.from('profiles').select('*').order('created_at')),
       updateProfile: (id, patch) => q(sb.from('profiles').update(patch).eq('id', id)),
 
+      // tokens para que un agente (Grok) entre por MCP; el valor en claro sólo vuelve al crearlo
+      mcpUrl: cfg.supabaseUrl + '/functions/v1/mcp',
+      agentTokens: () => q(sb.from('agent_tokens').select('id,user_id,label,hint,created_at,last_used_at,revoked_at').order('created_at', { ascending: false })),
+      createAgentToken: (agent, label) => q(sb.rpc('pt_create_agent_token', { agent, label })),
+      revokeAgentToken: (id) => q(sb.rpc('pt_revoke_agent_token', { token_id: id })),
+
       async publish() {
         const { error } = await sb.functions.invoke('publish');
         if (error) throw new Error('No se pudo publicar. Probá de nuevo en un rato.');
@@ -159,6 +165,7 @@
       { id: 'u-new', email: 'nuevo@peptalkarg.com', name: '', role: 'editor', active: false, created_at: ago(2) }
     ];
     let me = people[0];
+    const tokens = [{ id: 't-1', user_id: 'u-grok', label: 'Grok · API de xAI', hint: 'a1f3', created_at: ago(300), last_used_at: ago(3), revoked_at: null }];
     const who = (id) => { const p = people.find((x) => x.id === id); return p && { name: p.name, email: p.email, role: p.role }; };
     const pep = (window.PT.peptides || []).map((p, i) => ({
       slug: p.slug, name: p.name, alias: p.alias || '', sys: p.sys, type: p.type, ev: p.ev, ev_note: p.evNote || '', summary: p.summary,
@@ -246,6 +253,15 @@
         if (id === me.id && (patch.role || patch.active === false)) return fail('No podés cambiar tu propio rol.');
         Object.assign(people.find((p) => p.id === id), patch); return ok();
       },
+
+      mcpUrl: 'https://ejemplo.supabase.co/functions/v1/mcp',
+      agentTokens: () => ok(tokens),
+      createAgentToken(agent, label) {
+        const tok = 'ptk_demo' + crypto.randomUUID().replace(/-/g, '');
+        tokens.unshift({ id: crypto.randomUUID(), user_id: agent, label, hint: tok.slice(-4), created_at: now(), last_used_at: null, revoked_at: null });
+        return ok(tok);
+      },
+      revokeAgentToken(id) { tokens.find((t) => t.id === id).revoked_at = now(); return ok(); },
 
       publish: () => ok(),
       settings: () => ok(settings),
@@ -842,7 +858,9 @@
           <div><b>Editor</b><span>edita fichas, sube documentos, aprueba borradores y publica.</span></div>
           <div><b>Médico</b><span>ve y actualiza sólo los contactos que tiene asignados.</span></div>
           <div><b>Agente</b><span>para Grok: lee el catálogo y deja borradores; no publica ni ve contactos.</span></div>
-        </div></div>`;
+        </div></div>
+      ${me.role === 'admin' ? '<div class="card" id="mcpCard" style="margin-top:16px"></div>' : ''}`;
+    if (me.role === 'admin') mcpTokens($('#mcpCard'));
     $('#userRows').addEventListener('change', async (e) => {
       const input = e.target.closest('[data-k]');
       if (!input) return;
@@ -850,6 +868,50 @@
       try { await api.updateProfile(id, { [k]: v }); Object.assign(people.find((u) => u.id === id), { [k]: v }); toast('Guardado.'); }
       catch (err) { toast(err.message, true); viewUsers(el); }
     });
+  }
+
+  // conexión de agentes por MCP: un token por cliente (Grok por API, Grok en la app, etc.)
+  async function mcpTokens(card, fresh = '') {
+    const list = await api.agentTokens(), agents = people.filter((u) => u.role === 'agente');
+    const name = (id) => (people.find((u) => u.id === id) || {}).name || '—';
+    card.innerHTML = `
+      <h2>Conexión de Grok (MCP)</h2>
+      <p class="muted">Grok entra con un token y trabaja como su usuario agente: lee el catálogo y deja propuestas que aparecen en Borradores y Novedades. Nada se publica sin que una persona lo apruebe.</p>
+      <div class="mcp-url"><span>URL del servidor</span><code>${esc(api.mcpUrl)}</code><button class="btn sm" data-copy="${esc(api.mcpUrl)}">Copiar</button></div>
+      ${fresh ? `<div class="mcp-fresh"><b>Token nuevo: copialo ahora, no se vuelve a mostrar.</b>
+        <div><code>${esc(fresh)}</code><button class="btn sm accent" data-copy="${esc(fresh)}">Copiar</button></div>
+        <small>En el cliente MCP va como encabezado <code>Authorization: Bearer …</code>.</small></div>` : ''}
+      ${list.length ? `<div class="table-wrap"><table>
+        <thead><tr><th>Para qué</th><th>Agente</th><th>Termina en</th><th>Creado</th><th>Último uso</th><th></th></tr></thead>
+        <tbody>${list.map((t) => `<tr${t.revoked_at ? ' class="off"' : ''}>
+          <td>${esc(t.label || 'Sin descripción')}</td><td>${esc(name(t.user_id))}</td><td><code>…${esc(t.hint)}</code></td>
+          <td class="num">${fmtDate(t.created_at)}</td><td class="num">${t.last_used_at ? fmtDate(t.last_used_at) : 'nunca'}</td>
+          <td>${t.revoked_at ? `<span class="tag">revocado</span>` : `<button class="btn sm" data-revoke="${esc(t.id)}">Revocar</button>`}</td>
+        </tr>`).join('')}</tbody></table></div>` : ''}
+      ${agents.length ? `<form class="mcp-new">
+        <label class="field"><span>Agente</span><select name="agent">${options(agents.map((u) => [u.id, u.name || u.email]), agents[0].id)}</select></label>
+        <label class="field"><span>Para qué es <em>(para reconocerlo después)</em></span><input name="label" required placeholder="Grok · API de xAI"></label>
+        <button class="btn primary">Generar token</button>
+      </form>` : '<p class="muted">Para generar un token, primero creá un usuario con rol Agente y activalo.</p>'}`;
+    card.onclick = async (e) => {
+      const c = e.target.closest('[data-copy]'), r = e.target.closest('[data-revoke]');
+      if (c) { await navigator.clipboard.writeText(c.dataset.copy); toast('Copiado.'); }
+      if (r) {
+        // dos clics: el primero arma el botón, así un clic suelto no corta a Grok
+        if (!r.dataset.armed) {
+          r.dataset.armed = '1'; r.textContent = '¿Seguro? Revocar'; r.classList.add('accent');
+          setTimeout(() => { if (r.isConnected) { delete r.dataset.armed; r.textContent = 'Revocar'; r.classList.remove('accent'); } }, 4000);
+          return;
+        }
+        try { await api.revokeAgentToken(r.dataset.revoke); toast('Token revocado.'); mcpTokens(card); } catch (err) { toast(err.message, true); }
+      }
+    };
+    const form = card.querySelector('.mcp-new');
+    if (form) form.onsubmit = async (e) => {
+      e.preventDefault();
+      try { mcpTokens(card, await api.createAgentToken(form.agent.value, form.label.value.trim())); }
+      catch (err) { toast(err.message, true); }
+    };
   }
 
   /* ---------- revisión médica (sólo médicos) ---------- */

@@ -128,3 +128,25 @@ select t('médico ve la cola de dosis', (select count(*) from pt_dosing_queue())
 set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000e';
 select t('editor no usa la cola médica', (select count(*) from pt_dosing_queue()) = 0);
 reset role;
+
+\echo '— tokens MCP'
+set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000e';
+select falla('editor no genera tokens', $$select pt_create_agent_token('00000000-0000-0000-0000-0000000000a9')$$);
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+select falla('token sólo para agentes', $$select pt_create_agent_token('00000000-0000-0000-0000-00000000000e')$$);
+select set_config('pt.tok', pt_create_agent_token('00000000-0000-0000-0000-0000000000a9', 'prueba'), false);
+select t('admin ve el token sin el valor en claro', (select count(*) from agent_tokens where token_hash <> current_setting('pt.tok')) = 1);
+select falla('nadie inserta tokens a mano', $$insert into agent_tokens (user_id, token_hash, hint) values ('00000000-0000-0000-0000-0000000000a9', 'x', 'x')$$);
+select falla('la app no resuelve tokens', $$select pt_agent_for_token(current_setting('pt.tok'))$$);
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000a9';
+select t('agente no ve tokens', (select count(*) from agent_tokens) = 0);
+reset role;
+select t('el servidor resuelve el token al agente', pt_agent_for_token(current_setting('pt.tok')) = '00000000-0000-0000-0000-0000000000a9');
+select t('token inventado no resuelve', pt_agent_for_token('ptk_inventado') is null);
+reset request.jwt.claim.sub; update profiles set active = false where email = 'grok@x';
+select t('agente desactivado no entra', pt_agent_for_token(current_setting('pt.tok')) is null);
+update profiles set active = true where email = 'grok@x';
+set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+select pt_revoke_agent_token((select id from agent_tokens limit 1));
+reset role;
+select t('token revocado no entra', pt_agent_for_token(current_setting('pt.tok')) is null);

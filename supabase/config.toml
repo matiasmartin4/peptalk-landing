@@ -418,3 +418,7 @@ enabled = true
 # Mails en castellano: supabase/templates/magic_link.html e invite.html. Supabase no deja
 # cambiar las plantillas en el plan gratis con su correo propio; se activan cuando se
 # conecte un SMTP (p. ej. Resend) agregando acá [auth.email.template.magic_link] e [.invite].
+
+# el MCP de agentes se autentica con su propio token (ptk_…), no con un JWT de Supabase
+[functions.mcp]
+verify_jwt = false

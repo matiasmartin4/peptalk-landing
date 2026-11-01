@@ -308,3 +308,15 @@ label.btn { cursor: pointer; }
   .preview-col { position: static; }
   .mail { max-height: none; }
 }
+
+/* conexión MCP (Usuarios) */
+#mcpCard > p { margin: 4px 0 14px; font-size: 13px; }
+.mcp-url { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 14px; border-radius: 10px; background: var(--pt-surface-muted); font-size: 13px; }
+.mcp-url > span { font-weight: 600; color: var(--pt-text-muted); }
+.mcp-url code, .mcp-fresh code { font-size: 12px; word-break: break-all; }
+.mcp-fresh { display: grid; gap: 8px; padding: 12px 14px; margin-bottom: 14px; border-radius: 10px; background: #FFF1E3; border: 1px solid #F5C99B; font-size: 13px; }
+.mcp-fresh > div { display: flex; align-items: center; gap: 10px; }
+.mcp-fresh small { color: var(--pt-text-muted); }
+#mcpCard tr.off td { color: var(--pt-text-muted); }
+.mcp-new { display: grid; grid-template-columns: minmax(140px, 200px) 1fr auto; align-items: end; gap: 12px; margin-top: 14px; }
+@media (max-width: 640px) { .mcp-new { grid-template-columns: 1fr; } }
