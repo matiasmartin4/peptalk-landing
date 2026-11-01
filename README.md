@@ -34,3 +34,9 @@ python3 -m venv .venv && .venv/bin/pip install fonttools uharfbuzz
 - `body3d.js`: cuerpo de partículas con Three.js r149 (`vendor/three.min.js`, cargado recién cuando la sección de sistemas se acerca a la pantalla). La anatomía son volúmenes (elipsoides y cápsulas) muestreados en superficie; las zonas que se encienden por sistema están en `data.js` (`systems[].zones`).
 - Sin WebGL se muestra `assets/body.svg`, generado con `python3 scripts/body.py`.
 - Íconos: Lucide (ISC), en el sprite `assets/icons.svg`. Para sumar uno, bajar el SVG de lucide-static a una carpeta y correr `python3 scripts/icons.py <carpeta>`.
+
+## Contenido de la biblioteca
+
+- `research/peptides.json`: fuente de verdad de los 40 péptidos (estado por agencia con nota, fuente, URL y confianza; evidencia; resumen; referencias).
+- `python3 scripts/peptides.py [lotes.json…]`: fusiona, valida (valores permitidos, sistemas, URL de cada fuente) y genera `peptides.js`.
+- `docs/investigacion-peptidos.md`: método, tabla resumen y lista de lo que falta confirmar.

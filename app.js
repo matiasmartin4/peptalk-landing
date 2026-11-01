@@ -36,7 +36,9 @@
       sysName: sys ? sys.name : '',
       sysIcon: sys ? sys.icon : 'dna',
       ev: p.ev || '—',
-      st: { ANMAT: st.ANMAT || 'Pendiente', FDA: st.FDA || 'Pendiente', EMA: st.EMA || 'Pendiente', WADA: st.WADA || 'Pendiente' },
+      // status por agencia: { v, note, source, url, confidence } (ver research/peptides.json)
+      st: PT.agencies.reduce(function (o, a) { o[a] = (st[a] && st[a].v) || 'Pendiente'; return o; }, {}),
+      stInfo: PT.agencies.reduce(function (o, a) { o[a] = st[a] || null; return o; }, {}),
       haystack: norm(p.name + ' ' + p.alias + ' ' + p.slug)
     });
   });
@@ -45,6 +47,8 @@
   PT.systems.forEach(function (s) { s.count = peptides.filter(function (p) { return p.sys === s.id; }).length; });
   var matches = function (p, q) { q = norm(q.trim()); return q.length < 2 || p.haystack.indexOf(q) !== -1; };
   var pendingCount = function (p) { return PT.agencies.filter(function (a) { return p.st[a] === 'Pendiente'; }).length; };
+  var fmtDate = function (iso) { if (!iso) return '—'; var d = iso.split('-'); return d[2] + '/' + d[1] + '/' + d[0]; };
+  var host = function (url) { try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
 
   /* ---------- ui: piezas reutilizables ---------- */
   var icon = function (name, cls) { return '<svg class="i' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><use href="assets/icons.svg#' + name + '"/></svg>'; };
@@ -65,11 +69,13 @@
     }).join('') + '</div>';
   };
   // grilla detallada: agencia, jurisdicción y estado
-  var agencyGrid = function (p) {
-    return '<div class="ag-grid">' + PT.agencies.map(function (a) {
-      var info = PT.agencyInfo[a];
+  var agencyGrid = function (p, detail) {
+    return '<div class="ag-grid' + (detail ? ' ag-detail' : '') + '">' + PT.agencies.map(function (a) {
+      var info = PT.agencyInfo[a], x = p.stInfo[a];
+      var more = detail && x ? (x.note ? '<p class="ag-note">' + esc(x.note) + '</p>' : '') +
+        (x.url ? '<a class="ag-src" href="' + esc(x.url) + '" target="_blank" rel="noopener">' + icon('external-link') + esc(x.source || host(x.url)) + '</a>' : '') : '';
       return '<div class="ag-cell"><span class="ag-h">' + icon(info.icon) + '<b>' + a + '</b><small>' + info.name + '</small></span>' +
-        '<span class="ag-v">' + dot(p.st[a]) + esc(p.st[a]) + '</span></div>';
+        '<span class="ag-v">' + dot(p.st[a]) + esc(p.st[a]) + '</span>' + more + '</div>';
     }).join('') + '</div>';
   };
   var sysTile = function (p, size) { return '<span class="sys-tile' + (size ? ' ' + size : '') + '">' + icon(p.sysIcon || p.icon) + '</span>'; };
@@ -359,7 +365,7 @@
     var qEl = $('#libQ'), chipsEl = $('#sysChips'), results = $('#results'), empty = $('#empty'), countEl = $('#count'), clearBtn = $('#clearAll'), activeEl = $('#activeFilters');
     var selects = $$('#filters select');
 
-    $('#libMeta').textContent = plural(peptides.length, 'péptido', 'péptidos') + ' · ' + PT.systems.length + ' sistemas · Estados en verificación';
+    $('#libMeta').textContent = plural(peptides.length, 'péptido', 'péptidos') + ' · ' + PT.systems.length + ' sistemas · Fuentes revisadas el ' + fmtDate(peptides.reduce(function (m, p) { return p.checked > m ? p.checked : m; }, ''));
 
     var statusDeco = function (o) { return o.value === 'all' ? '' : dot(o.value); };
     var evDeco = function (o) { return o.value === 'all' ? '' : '<span class="ev-mini ' + (o.value === '—' ? 'ev-none' : 'ev-' + o.value) + '">' + o.value + '</span>'; };
@@ -406,7 +412,7 @@
         '<span class="card-main"><h3>' + esc(p.name) + '</h3><span class="alias">' + esc(p.alias) + '</span>' +
         '<span class="card-type">' + icon(p.type === 'Cosmético' ? 'sparkles' : 'dna') + esc(p.type) + '</span></span>' +
         agencyStrip(p) +
-        '<span class="card-f"><span class="verif">' + icon(pend ? 'clock' : 'shield-check') + (pend ? plural(pend, 'estado pendiente', 'estados pendientes') : 'Verificado') + '</span>' +
+        '<span class="card-f"><span class="verif">' + icon(pend ? 'clock' : 'file-text') + (pend ? plural(pend, 'estado pendiente', 'estados pendientes') : 'Fuentes al ' + fmtDate(p.checked)) + '</span>' +
         '<span class="go">' + icon('arrow-up-right') + '</span></span></button>';
     };
     var tableHtml = function (list) {
@@ -484,14 +490,19 @@
         '<div class="d-hero">' + icon(p.sysIcon, 'card-mark') +
           '<div class="crumbs">Péptidos › ' + esc(p.sysName) + '</div>' +
           '<div class="d-id">' + sysTile(p, 'lg') + '<div><h2 id="dTitle">' + esc(p.name) + '</h2><div class="alias">' + esc(p.alias) + '</div></div></div>' +
-          '<div class="badges"><span class="tag">' + icon(p.sysIcon) + esc(p.sysName) + '</span><span class="tag tag-ghost">' + icon('dna') + esc(p.type) + '</span><span class="pill">' + icon('stethoscope') + 'Pendiente de revisión médica</span></div>' +
+          '<div class="badges"><span class="tag">' + icon(p.sysIcon) + esc(p.sysName) + '</span><span class="tag tag-ghost">' + icon('dna') + esc(p.type) + '</span><span class="rev">' + icon('stethoscope') + 'Pendiente de revisión médica</span></div>' +
         '</div>' +
         '<div class="d-stats">' +
           '<div><small>Evidencia</small>' + evMeter(p.ev, true) + '</div>' +
-          '<div><small>Estados verificados</small><b class="big">' + (4 - pend) + '<span>/4</span></b></div>' +
+          '<div><small>Estados con fuente</small><b class="big">' + (4 - pend) + '<span>/4</span></b></div>' +
         '</div>' +
-        '<div class="d-block"><h3>' + icon('scale') + 'Estado regulatorio</h3>' + agencyGrid(p) + '<p class="d-note">' + icon('info') + 'Cada estado se publica con su fuente y fecha cuando peptalk lab lo verifica.</p></div>' +
-        '<div class="d-block"><h3>' + icon('book-open') + 'Resumen clave</h3><p>Ficha en preparación. peptalk lab está reuniendo las fuentes primarias para explicar qué es ' + esc(p.name) + ' y qué se sabe hasta hoy.</p></div>' +
+        '<div class="d-block"><h3>' + icon('book-open') + 'Resumen clave</h3><p>' + (p.summary ? esc(p.summary) : 'Ficha en preparación. Estamos reuniendo las fuentes primarias sobre ' + esc(p.name) + '.') + '</p>' +
+          (p.evNote ? '<p class="d-note">' + icon('microscope') + esc(p.evNote) + '</p>' : '') + '</div>' +
+        '<div class="d-block"><h3>' + icon('scale') + 'Estado regulatorio</h3>' + agencyGrid(p, true) + '</div>' +
+        (p.refs && p.refs.length ? '<div class="d-block"><h3>' + icon('file-text') + 'Referencias</h3><ol class="refs">' + p.refs.map(function (r) {
+          return '<li><a href="' + esc(r.url) + '" target="_blank" rel="noopener">' + esc(r.title) + '</a><small>' + esc(r.source || host(r.url)) + '</small></li>';
+        }).join('') + '</ol></div>' : '') +
+        '<p class="d-review">' + icon('calendar-check') + 'Fuentes revisadas el ' + fmtDate(p.checked) + '. Investigación preliminar asistida por IA, pendiente de revisión médica.</p>' +
         '<div class="d-cta"><span class="d-cta-ic">' + icon('stethoscope') + '</span><div><b>Consultá con un especialista</b><p>Te ponemos en contacto con un médico matriculado en Argentina, por teleconsulta o presencial.</p><a class="btn btn-orange" href="#derivacion" data-ref="' + esc(p.name) + '">Pedir una derivación' + icon('arrow-right') + '</a></div></div>' +
         '<p class="d-foot">Información, no indicación. No indicamos dosis, usos ni dónde conseguir productos.</p>';
       el.hidden = false; scrim.hidden = false;

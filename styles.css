@@ -539,10 +539,10 @@ td small { display: block; color: var(--ink-3); font-size: 12.5px; }
 .d-id h2 { font-size: 34px; font-weight: 800; letter-spacing: -.035em; }
 .d-id .alias { color: var(--ink-3); font-size: 14px; margin-top: 2px; }
 .badges { position: relative; display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
-.badges .tag, .badges .pill { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
+.badges .tag, .badges .rev { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
 .badges .tag { background: var(--surface); color: var(--rust); }
 .badges .tag-ghost { background: rgba(255,255,255,.55); color: var(--ink-2); }
-.badges .pill { border: 1px dashed #B5ADA4; color: var(--ink-2); }
+.badges .rev { border: 1px dashed #B5ADA4; color: var(--ink-2); }
 .badges .i { width: 14px; height: 14px; }
 .d-stats { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; padding: 20px 28px 0; }
 .d-stats > div { padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); display: grid; gap: 8px; align-content: start; }
@@ -635,3 +635,15 @@ td small { display: block; color: var(--ink-3); font-size: 12.5px; }
   .pill-panel { grid-template-columns: 1fr; width: 100%; max-height: calc(100vh - 110px); overflow-y: auto; }
   .nav-links { top: calc(var(--nav-h) + 40px); }
 }
+.ag-detail { grid-template-columns: 1fr; }
+.ag-detail .ag-cell { gap: 8px; }
+.ag-note { font-size: 13px !important; line-height: 1.45; color: var(--ink-2) !important; }
+.ag-src { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; text-decoration: none; word-break: break-word; }
+.ag-src .i { width: 13px; height: 13px; }
+.refs { margin: 0; padding-left: 20px; display: grid; gap: 10px; font-size: 13.5px; }
+.refs a { font-weight: 600; text-decoration: none; }
+.refs a:hover { text-decoration: underline; }
+.refs small { display: block; color: var(--ink-3); font-size: 12px; }
+.d-review { display: flex; gap: 8px; align-items: flex-start; margin: 20px 28px 0; padding: 12px 14px; border-radius: 12px; background: var(--sand); font-size: 12.5px; color: var(--ink-2); }
+.d-review .i { margin-top: 2px; flex: none; color: var(--rust); }
+@media (max-width: 560px) { .d-review { margin-inline: 18px; } }
