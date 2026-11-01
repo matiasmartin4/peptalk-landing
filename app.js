@@ -46,6 +46,18 @@
   peptides.forEach(function (p) { bySlug[p.slug] = p; });
   PT.systems.forEach(function (s) { s.count = peptides.filter(function (p) { return p.sys === s.id; }).length; });
   var matches = function (p, q) { q = norm(q.trim()); return q.length < 2 || p.haystack.indexOf(q) !== -1; };
+  // estados que efectivamente aparecen en las agencias visibles (Pendiente siempre)
+  var shownStatuses = PT.statuses.filter(function (s) {
+    return s.v === 'Pendiente' || peptides.some(function (p) { return PT.agencies.some(function (a) { return p.st[a] === s.v; }); });
+  });
+  // textos que nombran las agencias: se arman con las visibles (configurables desde el backoffice)
+  var agList = function (tail) {
+    var a = PT.agencies;
+    return tail ? a.join(', ') : a.length > 1 ? a.slice(0, -1).join(', ') + ' y ' + a[a.length - 1] : a[0];
+  };
+  $$('[data-ag-list]').forEach(function (el) { el.textContent = agList(el.hasAttribute('data-tail')); });
+  $$('[data-ag-order]').forEach(function (el) { el.textContent = PT.agencies.join(' → '); });
+  $$('[data-ag]').forEach(function (el) { el.hidden = PT.agencies.indexOf(el.dataset.ag) < 0; });
   var pendingCount = function (p) { return PT.agencies.filter(function (a) { return p.st[a] === 'Pendiente'; }).length; };
   var fmtDate = function (iso) { if (!iso) return '—'; var d = iso.split('-'); return d[2] + '/' + d[1] + '/' + d[0]; };
   var host = function (url) { try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
@@ -64,7 +76,7 @@
   };
   // franja compacta: una pastilla por agencia, el punto dice el estado
   var agencyStrip = function (p) {
-    return '<div class="ag-strip">' + PT.agencies.map(function (a) {
+    return '<div class="ag-strip" style="--n:' + PT.agencies.length + '">' + PT.agencies.map(function (a) {
       return '<span class="ag" title="' + a + ': ' + esc(p.st[a]) + '">' + dot(p.st[a]) + a + '</span>';
     }).join('') + '</div>';
   };
@@ -363,6 +375,7 @@
     var DEFAULTS = { q: '', sys: 'all', anmat: 'all', fda: 'all', wada: 'all', evid: 'all' };
     var state = Object.assign({ view: 'cards' }, DEFAULTS);
     var qEl = $('#libQ'), chipsEl = $('#sysChips'), results = $('#results'), empty = $('#empty'), countEl = $('#count'), clearBtn = $('#clearAll'), activeEl = $('#activeFilters');
+    $$('#filters select').forEach(function (s) { if (s.dataset.f !== 'evid' && PT.agencies.indexOf(s.dataset.label) < 0) s.remove(); });
     var selects = $$('#filters select');
 
     $('#libMeta').textContent = plural(peptides.length, 'péptido', 'péptidos') + ' · ' + PT.systems.length + ' sistemas · Fuentes revisadas el ' + fmtDate(peptides.reduce(function (m, p) { return p.checked > m ? p.checked : m; }, ''));
@@ -373,7 +386,7 @@
       var isEv = sel.dataset.f === 'evid';
       sel.innerHTML = isEv
         ? '<option value="all">Todas</option>' + PT.evidence.map(function (e) { return '<option value="' + e.v + '">' + (e.v === '—' ? 'Pendiente' : e.name) + '</option>'; }).join('')
-        : '<option value="all">Todos</option>' + PT.statuses.map(function (s) { return '<option value="' + s.v + '">' + s.v + '</option>'; }).join('');
+        : '<option value="all">Todos</option>' + shownStatuses.map(function (s) { return '<option value="' + s.v + '">' + s.v + '</option>'; }).join('');
       brandSelect(sel, { decorate: isEv ? evDeco : statusDeco, compact: true });
       sel.addEventListener('change', function () { state[sel.dataset.f] = sel.value; render(); });
     });
@@ -473,7 +486,7 @@
   })();
 
   /* ---------- legend ---------- */
-  $('#legendStates').innerHTML = PT.statuses.map(function (s) { return '<li>' + dot(s.v) + '<b>' + s.v + '</b><small>' + s.desc + '</small></li>'; }).join('');
+  $('#legendStates').innerHTML = shownStatuses.map(function (s) { return '<li>' + dot(s.v) + '<b>' + s.v + '</b><small>' + s.desc + '</small></li>'; }).join('');
   $('#legendEv').innerHTML = PT.evidence.map(function (e) { return '<li>' + evMeter(e.v) + '<span><b>' + (e.v === '—' ? 'Pendiente' : e.v) + '</b> · ' + e.name + '</span></li>'; }).join('');
 
   /* ---------- drawer (ficha, enlazable por #p/slug) ---------- */
@@ -494,7 +507,7 @@
         '</div>' +
         '<div class="d-stats">' +
           '<div><small>Evidencia</small>' + evMeter(p.ev, true) + '</div>' +
-          '<div><small>Estados con fuente</small><b class="big">' + (4 - pend) + '<span>/4</span></b></div>' +
+          '<div><small>Estados con fuente</small><b class="big">' + (PT.agencies.length - pend) + '<span>/' + PT.agencies.length + '</span></b></div>' +
         '</div>' +
         '<div class="d-block"><h3>' + icon('book-open') + 'Resumen clave</h3><p>' + (p.summary ? esc(p.summary) : 'Ficha en preparación. Estamos reuniendo las fuentes primarias sobre ' + esc(p.name) + '.') + '</p>' +
           (p.evNote ? '<p class="d-note">' + icon('microscope') + esc(p.evNote) + '</p>' : '') + '</div>' +

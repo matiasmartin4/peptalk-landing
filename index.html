@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>peptalk · Biblioteca de péptidos en Argentina</title>
-<meta name="description" content="Qué es cada péptido, qué dice la evidencia y en qué estado regulatorio está en Argentina y el mundo. ANMAT, FDA, EMA y WADA, con fuente y fecha.">
+<meta name="description" content="Qué es cada péptido, qué dice la evidencia y en qué estado regulatorio está en Argentina y Estados Unidos. ANMAT y FDA, con fuente y fecha.">
 <meta name="theme-color" content="#FCFBF9">
 <link rel="canonical" href="https://peptalkarg.com/">
 <meta property="og:type" content="website">
@@ -22,7 +22,7 @@
 <link rel="apple-touch-icon" href="brand/logo/peptalk-icon-dark-180.png">
 <link rel="preload" href="brand/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="brand/tokens/tokens.css?v=5d5fe3cd">
-<link rel="stylesheet" href="styles.css?v=d107d0bd">
+<link rel="stylesheet" href="styles.css?v=5026af13">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"peptalk","url":"https://peptalkarg.com/","sameAs":["https://x.com/Peptalkarg"],"inLanguage":"es-AR","description":"Biblioteca informativa de péptidos en Argentina: evidencia y estado regulatorio con fuente y fecha."}
 </script>
@@ -69,7 +69,7 @@
   <div class="pill-panel" id="pillPanel" hidden>
     <a href="#biblioteca"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#flask-conical"/></svg><span><b>Biblioteca</b><small>Todos los péptidos y sus estados</small></span></a>
     <a href="#sistemas"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#heart-pulse"/></svg><span><b>Sistemas del cuerpo</b><small>Explorá por zona</small></span></a>
-    <a href="#estados"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#scale"/></svg><span><b>Cómo leer los estados</b><small>ANMAT, FDA, EMA y WADA</small></span></a>
+    <a href="#estados"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#scale"/></svg><span><b>Cómo leer los estados</b><small data-ag-list>ANMAT, FDA, EMA y WADA</small></span></a>
     <a href="#novedades"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#newspaper"/></svg><span><b>Resumen semanal</b><small>Regulación e investigación</small></span></a>
     <a href="#guias"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#book-open"/></svg><span><b>Guías</b><small>Para entender antes de preguntar</small></span></a>
     <a href="#metodo"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#shield-check"/></svg><span><b>Metodología</b><small>Fuentes y verificación</small></span></a>
@@ -87,7 +87,7 @@
     <div class="hero-copy">
       <span class="eyebrow"><i></i>Biblioteca de péptidos · Argentina</span>
       <h1>Qué es cada péptido, qué dice la evidencia y <span class="hl">en qué estado está.</span></h1>
-      <p class="lead">Fichas claras, en castellano, con el estado ante ANMAT, FDA, EMA y WADA. Cada dato con su fuente y su fecha de verificación. Sin promesas, sin vender nada.</p>
+      <p class="lead">Fichas claras, en castellano, con el estado ante <span data-ag-list>ANMAT, FDA, EMA y WADA</span>. Cada dato con su fuente y su fecha de verificación. Sin promesas, sin vender nada.</p>
 
       <div class="search" id="heroSearch">
         <label for="q" class="sr">Buscar un péptido</label>
@@ -113,7 +113,7 @@
   </div>
 
   <div class="wrap trust">
-    <div><span class="ti"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#file-text"/></svg></span><div><b>Fuentes citadas en cada ficha</b><p>Boletín Oficial, ANMAT, FDA, EMA, WADA y estudios con DOI.</p></div></div>
+    <div><span class="ti"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#file-text"/></svg></span><div><b>Fuentes citadas en cada ficha</b><p>Boletín Oficial, <span data-ag-list data-tail=",">ANMAT, FDA, EMA, WADA</span> y estudios con DOI.</p></div></div>
     <div><span class="ti"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#stethoscope"/></svg></span><div><b>Revisión médica con matrícula</b><p>Un profesional revisa cada ficha antes de publicarla.</p></div></div>
     <div><span class="ti"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#calendar-check"/></svg></span><div><b>Estados con fecha de verificación</b><p>Si no lo verificamos todavía, lo decimos.</p></div></div>
   </div>
@@ -189,9 +189,9 @@
     <div class="states-copy">
       <span class="kicker">Cómo leer los estados</span>
       <h2>Estados y evidencia, sin vueltas</h2>
-      <p>Siempre en el mismo orden: <b>ANMAT → FDA → EMA → WADA</b>. Cada estado lleva fuente y fecha. Si todavía no lo verificamos, dice «Pendiente» y se muestra igual.</p>
+      <p>Siempre en el mismo orden: <b data-ag-order>ANMAT → FDA → EMA → WADA</b>. Cada estado lleva fuente y fecha. Si todavía no lo verificamos, dice «Pendiente» y se muestra igual.</p>
       <p>Que un péptido esté aprobado para un uso no significa que esté aprobado para todos. Que se venda «solo para investigación» no es una aprobación.</p>
-      <p>En la columna EMA contamos como «Aprobado» tanto la autorización centralizada de la EMA como las nacionales de países de la Unión Europea; la ficha aclara cuál es.</p>
+      <p data-ag="EMA">En la columna EMA contamos como «Aprobado» tanto la autorización centralizada de la EMA como las nacionales de países de la Unión Europea; la ficha aclara cuál es.</p>
     </div>
     <div class="legend-card">
       <h3>Estados por agencia</h3>
@@ -213,7 +213,7 @@
       <h2>Lo que pasa con los péptidos, una vez por semana</h2>
       <p>Regulación, estudios nuevos y novedades de Argentina (ANMAT, Boletín Oficial, sociedades médicas), con la fuente de cada cosa. Estamos preparando el primer número.</p>
       <ul class="news-cats">
-        <li><span class="tag">Regulación</span>Cambios en ANMAT, FDA, EMA y la lista WADA.</li>
+        <li><span class="tag">Regulación</span>Cambios en <span data-ag-list>ANMAT, FDA, EMA y WADA</span>.</li>
         <li><span class="tag">Investigación</span>Ensayos y estudios publicados, con DOI.</li>
         <li><span class="tag">Argentina</span>Lo local: disposiciones, alertas y sociedades médicas.</li>
       </ul>
@@ -334,7 +334,7 @@
 </aside>
 
 <script src="data.js?v=de37d963"></script>
-<script src="peptides.js?v=fb2e909e"></script>
-<script src="app.js?v=07e8c55c"></script>
+<script src="peptides.js?v=24153478"></script>
+<script src="app.js?v=03faf952"></script>
 </body>
 </html>
