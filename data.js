@@ -53,7 +53,7 @@ window.PT = {
 
   provinces: ['Buenos Aires', 'Ciudad Autónoma de Buenos Aires', 'Catamarca', 'Chaco', 'Chubut', 'Córdoba', 'Corrientes', 'Entre Ríos', 'Formosa', 'Jujuy', 'La Pampa', 'La Rioja', 'Mendoza', 'Misiones', 'Neuquén', 'Río Negro', 'Salta', 'San Juan', 'San Luis', 'Santa Cruz', 'Santa Fe', 'Santiago del Estero', 'Tierra del Fuego', 'Tucumán'],
 
-  // Endpoints de formularios (Formspree, Google Apps Script, etc.).
-  // Vacío = el formulario valida pero avisa que todavía no recibe pedidos.
-  endpoints: { newsletter: '', referral: '' }
+  // Base del backoffice (Supabase). Los formularios guardan con la función pt_submit_lead;
+  // la clave anon es pública por diseño. Vacío = el formulario valida pero avisa que todavía no recibe pedidos.
+  supabase: { url: '', anonKey: '' }
 };

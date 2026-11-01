@@ -1,0 +1,33 @@
+# Publicación desde el backoffice: baja las fichas publicadas de Supabase,
+# valida y regenera peptides.js, versiona los archivos y commitea (GitHub Pages redeploya solo).
+name: Publicar desde el backoffice
+on:
+  repository_dispatch:
+    types: [publicar]
+  workflow_dispatch:
+concurrency: publicar
+permissions:
+  contents: write
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bajar fichas publicadas
+        run: python3 scripts/db.py export
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      - name: Validar y generar peptides.js
+        run: python3 scripts/peptides.py
+      - name: Versionar archivos
+        run: python3 scripts/bust.py
+      - name: Commitear si hubo cambios
+        run: |
+          git config user.name "peptalk backoffice"
+          git config user.email "backoffice@peptalkarg.com"
+          git add research/peptides.json peptides.js index.html app.js
+          git diff --cached --quiet || { git commit -m "Publicación desde el backoffice"; git push; }

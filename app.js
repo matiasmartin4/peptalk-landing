@@ -545,9 +545,14 @@
   })();
 
   /* ---------- forms ---------- */
-  var send = function (url, data) {
-    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(data) })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); });
+  var db = PT.supabase;
+  var dbReady = !!(db && db.url);
+  var send = function (data) {
+    return fetch(db.url + '/rest/v1/rpc/pt_submit_lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: db.anonKey, Authorization: 'Bearer ' + db.anonKey },
+      body: JSON.stringify({ p: data })
+    }).then(function (r) { if (!r.ok) throw new Error(r.status); });
   };
   var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -558,9 +563,9 @@
       var ok = EMAIL.test(input.value.trim());
       input.setAttribute('aria-invalid', !ok);
       if (!ok) { msg.textContent = 'Revisá el email.'; input.focus(); return; }
-      if (!PT.endpoints.newsletter) { msg.textContent = 'Todavía no abrimos las suscripciones. Volvé pronto.'; return; }
+      if (!dbReady) { msg.textContent = 'Todavía no abrimos las suscripciones. Volvé pronto.'; return; }
       msg.textContent = 'Enviando…';
-      send(PT.endpoints.newsletter, { email: input.value.trim() })
+      send({ kind: 'newsletter', email: input.value.trim() })
         .then(function () { form.reset(); msg.textContent = 'Listo, te vamos a mandar el próximo resumen.'; })
         .catch(function () { msg.textContent = 'No pudimos suscribirte. Probá de nuevo en un rato.'; });
     });
@@ -600,11 +605,12 @@
         return;
       }
       summary.hidden = true;
-      if (!PT.endpoints.referral) { msg.textContent = 'Las derivaciones abren pronto. Todavía no estamos recibiendo pedidos online.'; return; }
+      if (!dbReady) { msg.textContent = 'Las derivaciones abren pronto. Todavía no estamos recibiendo pedidos online.'; return; }
       var btn = $('#refSubmit'); btn.disabled = true; btn.textContent = 'Enviando…';
-      send(PT.endpoints.referral, {
-        name: f.name.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim(), prov: f.prov.value,
-        pep: f.pep.value.trim(), mod: f.mod.value, motivo: motivo.value.trim()
+      send({
+        kind: 'derivacion', name: f.name.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim(), prov: f.prov.value,
+        pep: f.pep.value.trim(), mod: f.mod.value, motivo: motivo.value.trim(),
+        consent: { adult: f.adult.checked, c1: f.c1.checked, c2: f.c2.checked }
       }).then(function () {
         form.reset(); prov.dispatchEvent(new Event('pt:sync')); $('#motivoLen').textContent = '0/300';
         msg.textContent = 'Listo, recibimos tu pedido. Te vamos a confirmar por email.';

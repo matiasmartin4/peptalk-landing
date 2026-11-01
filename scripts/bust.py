@@ -13,14 +13,15 @@ def h(rel):
     return hashlib.md5((ROOT / rel).read_bytes()).hexdigest()[:8]
 
 
-def stamp(path, rels):
+def stamp(path, rels, base=""):
     text = (ROOT / path).read_text()
     for rel in rels:
-        text = re.sub(re.escape(rel) + r"(\?v=[0-9a-f]+)?", f"{rel}?v={h(rel)}", text)
+        text = re.sub(re.escape(rel) + r"(\?v=[0-9a-f]+)?", f"{rel}?v={h(base + rel)}", text)
     (ROOT / path).write_text(text)
 
 
 # app.js carga body3d.js: primero se versiona esa referencia y después app.js en el HTML.
 stamp("app.js", ["body3d.js"])
 stamp("index.html", ["brand/tokens/tokens.css", "styles.css", "data.js", "peptides.js", "app.js"])
+stamp("admin/index.html", ["admin.css", "admin.js", "config.js", "../data.js"], base="admin/")
 print("ok")

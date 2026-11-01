@@ -4,7 +4,7 @@ Sitio estático (sin build ni dependencias), publicado en GitHub Pages con el do
 
 - `index.html`: estructura y textos fijos.
 - `styles.css`: tokens de diseño arriba (colores, radios, sombras) y estilos por sección.
-- `data.js`: todo el contenido de la biblioteca (péptidos, sistemas, estados, evidencia) y los endpoints de formularios.
+- `data.js`: sistemas, agencias, estados, evidencia y la conexión a Supabase que usan los formularios.
 - `app.js`: lógica por módulos (buscador, mapa del cuerpo, biblioteca, ficha, formularios).
 
 Para sumar un péptido o verificar un estado se edita solo `data.js`. Las fichas tienen URL propia: `peptalkarg.com/#p/<slug>`.
@@ -31,7 +31,7 @@ python3 -m venv .venv && .venv/bin/pip install fonttools uharfbuzz
 
 ## Cuerpo 3D e íconos
 
-- `body3d.js`: cuerpo de partículas con Three.js r149 (`vendor/three.min.js`, cargado recién cuando la sección de sistemas se acerca a la pantalla). La anatomía son volúmenes (elipsoides y cápsulas) muestreados en superficie; las zonas que se encienden por sistema están en `data.js` (`systems[].zones`).
+- `body3d.js`: cuerpo de partículas con Three.js r149 (`vendor/three.min.js`, cargado recién cuando la sección de sistemas se acerca a la pantalla). La anatomía son volúmenes (elipsoides y conos redondeados) fundidos en una sola piel con unión suave y muestreados en superficie; las zonas que se encienden por sistema están en `data.js` (`systems[].zones`).
 - Sin WebGL se muestra `assets/body.svg`, generado con `python3 scripts/body.py`.
 - Íconos: Lucide (ISC), en el sprite `assets/icons.svg`. Para sumar uno, bajar el SVG de lucide-static a una carpeta y correr `python3 scripts/icons.py <carpeta>`.
 
@@ -40,3 +40,22 @@ python3 -m venv .venv && .venv/bin/pip install fonttools uharfbuzz
 - `research/peptides.json`: fuente de verdad de los 40 péptidos (estado por agencia con nota, fuente, URL y confianza; evidencia; resumen; referencias).
 - `python3 scripts/peptides.py [lotes.json…]`: fusiona, valida (valores permitidos, sistemas, URL de cada fuente) y genera `peptides.js`.
 - `docs/investigacion-peptidos.md`: método, tabla resumen y lista de lo que falta confirmar.
+
+## Backoffice (`admin/`)
+
+Página: https://peptalkarg.com/admin/ (sin indexar). Sin conexión configurada corre en modo demo con las fichas actuales en memoria.
+
+- Base: Supabase (Postgres + login + archivos). Esquema y permisos en `supabase/migrations/`; la carga inicial de las 40 fichas en `supabase/seed.sql` (`python3 scripts/db.py seed`).
+- Roles: **admin** (todo), **editor** (fichas, documentos, aprueba borradores, publica), **médico** (sólo sus contactos), **agente** (Grok: lee el catálogo y deja borradores). Los permisos viven en la base (RLS); el navegador sólo ve lo que su rol permite. Un usuario nuevo entra desactivado hasta que un admin lo activa.
+- Borradores: lo que propone un agente no toca la ficha hasta que un editor lo aprueba (`pt_approve_draft`).
+- Contactos: los formularios del sitio guardan con `pt_submit_lead`, la única función pública; el sitio no puede leer la tabla.
+- Historial: cada cambio en fichas, notas, documentos, borradores y contactos queda en `audit` con autor y fecha.
+- Publicar: el botón llama a la función `supabase/functions/publish`, que dispara `.github/workflows/publicar.yml`: baja las fichas publicadas (`scripts/db.py export`), corre `peptides.py` y `bust.py` y commitea. GitHub Pages redeploya solo.
+- Probar migración y permisos por rol en un Postgres local: `./scripts/test_db.sh`.
+
+Puesta en marcha (una vez):
+
+1. Crear el proyecto en supabase.com (región São Paulo) y correr `supabase/migrations/*.sql` y `supabase/seed.sql` en el SQL Editor (o `supabase db push`).
+2. Poner la URL y la clave anon en `admin/config.js` y en `data.js` (`supabase`).
+3. Invitar a los usuarios desde Authentication → Users; al primero hacerlo admin con `update profiles set role = 'admin', active = true where email = '…';`.
+4. Publicación: secretos `SUPABASE_URL` y `SUPABASE_SERVICE_KEY` en GitHub (Settings → Secrets → Actions); en Supabase, desplegar la función `publish` con los secretos `GITHUB_TOKEN` (fine-grained, Contents: write) y `GITHUB_REPO=matiasmartin4/peptalk-landing`.
