@@ -53,13 +53,14 @@
   <form class="login-card" id="loginForm" novalidate>
     <img src="../brand/logo/peptalk-logo.svg" alt="peptalk" width="132" height="36">
     <h1>Backoffice</h1>
-    <p class="muted">Entrá con tu usuario del equipo.</p>
+    <p class="muted" id="loginLead">Te mandamos un link a tu email para entrar. Queda abierto 7 días.</p>
     <label class="field"><span>Email</span><input name="email" type="email" autocomplete="username" required></label>
-    <label class="field"><span>Contraseña</span><input name="password" type="password" autocomplete="current-password" required></label>
+    <label class="field" id="pwField" hidden><span>Contraseña</span><input name="password" type="password" autocomplete="current-password"></label>
     <p class="form-msg" id="loginMsg" role="alert"></p>
-    <button class="btn primary block" type="submit">Entrar</button>
-    <button class="link" type="button" id="forgot">Olvidé mi contraseña</button>
-    <p class="demo-note" id="demoNote" hidden>Demo sin base conectada: los cambios no se guardan. Usuarios de prueba: admin@, editor@ y medico@peptalkarg.com, con cualquier contraseña.</p>
+    <button class="btn primary block" type="submit" id="loginBtn">Enviarme el link</button>
+    <button class="link" type="button" id="pwToggle">Entrar con contraseña</button>
+    <button class="link" type="button" id="forgot" hidden>Olvidé mi contraseña</button>
+    <p class="demo-note" id="demoNote" hidden>Demo sin base conectada: los cambios no se guardan y se entra directo, sin mail. Usuarios de prueba: admin@, editor@ y medico@peptalkarg.com.</p>
   </form>
 </main>
 
@@ -91,7 +92,7 @@
 <script src="../data.js?v=de37d963"></script>
 <script src="config.js?v=2c363bd8"></script>
 <script src="../vendor/tiptap.min.js"></script>
-<script src="admin.js?v=e4e5fc9b"></script>
+<script src="admin.js?v=08fa1134"></script>
 <script src="media.js?v=447b434e"></script>
 <script src="newsletter.js?v=7e7a756a"></script>
 </body>

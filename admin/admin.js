@@ -31,6 +31,7 @@
   const stable = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x));
   const fmtSize = (b) => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
 
+  const SESSION_DAYS = 7;   // la sesión queda abierta una semana desde el último ingreso por link o contraseña
   const AGENCIES = ['ANMAT', 'FDA', 'EMA', 'WADA'];   // el backoffice edita todas; el sitio muestra las de la configuración
   const ROLE_NAME = { admin: 'Admin', editor: 'Editor', medico: 'Médico', agente: 'Agente' };
   const SYS = Object.fromEntries(PT.systems.map((s) => [s.id, s.name]));
@@ -76,7 +77,15 @@
       async session() {
         const { data } = await sb.auth.getSession();
         uid = data.session ? data.session.user.id : null;
-        return uid ? q(sb.from('profiles').select('*').eq('id', uid).single()) : null;
+        if (!uid) return null;
+        const profile = await q(sb.from('profiles').select('*').eq('id', uid).single());
+        return Object.assign(profile, { signed_in_at: data.session.user.last_sign_in_at });
+      },
+      async sendLink(email) {
+        // shouldCreateUser: false → sólo reciben link las personas invitadas (el registro está cerrado)
+        const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
+        // a quien no está habilitado no se le dice: así no se puede averiguar qué emails tienen cuenta
+        if (error && error.status !== 400 && error.status !== 422) throw new Error(humanError(error));
       },
       async signIn(email, password) {
         const { error } = await sb.auth.signInWithPassword({ email, password });
@@ -185,7 +194,8 @@
 
     return {
       session: () => ok(null),
-      signIn(email) { const p = people.find((x) => x.email === email.toLowerCase()); if (!p) return fail('Email o contraseña incorrectos.'); me = p; return ok(p); },
+      signIn(email) { const p = people.find((x) => x.email === email.toLowerCase()); if (!p) return fail('Email o contraseña incorrectos.'); me = p; return ok(Object.assign({ signed_in_at: now() }, p)); },
+      sendLink: () => ok(),
       signOut: () => ok(),
       resetPassword: () => ok(),
       onRecovery() {},
@@ -265,16 +275,31 @@
 
   function initLogin() {
     const form = $('#loginForm');
+    let withPassword = false;
     if (DEMO) $('#demoNote').hidden = false;
+    $('#pwToggle').addEventListener('click', () => {
+      withPassword = !withPassword;
+      $('#pwField').hidden = !withPassword;
+      $('#forgot').hidden = !withPassword;
+      $('#loginBtn').textContent = withPassword ? 'Entrar' : 'Enviarme el link';
+      $('#pwToggle').textContent = withPassword ? 'Prefiero que me manden un link' : 'Entrar con contraseña';
+      $('#loginMsg').textContent = '';
+      (withPassword ? form.password : form.email).focus();
+    });
+    $('#forgot').hidden = true;
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = form.email.value.trim(), pw = form.password.value;
-      if (!email || !pw) { $('#loginMsg').textContent = 'Completá email y contraseña.'; return; }
-      const btn = $('button[type=submit]', form);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { $('#loginMsg').textContent = 'Escribí tu email.'; form.email.focus(); return; }
+      if (withPassword && !pw) { $('#loginMsg').textContent = 'Escribí tu contraseña.'; return; }
+      const btn = $('#loginBtn');
       btn.disabled = true;
       try {
-        const profile = await api.signIn(email, pw);
-        await enter(profile);
+        // en la demo no hay mails: se entra directo
+        if (withPassword || DEMO) return await enter(await api.signIn(email, pw));
+        await api.sendLink(email);
+        $('#loginMsg').textContent = '';
+        $('#loginLead').innerHTML = `Si <b>${esc(email)}</b> está habilitado, te llega un mail con el link para entrar. Abrilo en este dispositivo. Si no aparece, mirá en spam.`;
       } catch (err) {
         $('#loginMsg').textContent = err.message;
       } finally { btn.disabled = false; }
@@ -300,6 +325,10 @@
 
   async function enter(profile) {
     if (!profile) return showLogin();
+    if (profile.signed_in_at && Date.now() - new Date(profile.signed_in_at) > SESSION_DAYS * 864e5) {
+      await api.signOut();
+      return showLogin(`Pasaron ${SESSION_DAYS} días desde que entraste. Pedí un link nuevo.`);
+    }
     if (!profile.active) {
       await api.signOut();
       return showLogin('Tu usuario todavía no está activo. Pedile a un admin que lo active.');
