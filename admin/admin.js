@@ -158,7 +158,7 @@
 
     return {
       session: () => ok(null),
-      signIn(email, _pw, role) { me = people.find((p) => p.role === (role || 'admin')); return ok(me); },
+      signIn(email) { const p = people.find((x) => x.email === email.toLowerCase()); if (!p) return fail('Email o contraseña incorrectos.'); me = p; return ok(p); },
       signOut: () => ok(),
       resetPassword: () => ok(),
       onRecovery() {},
@@ -226,19 +226,15 @@
 
   function initLogin() {
     const form = $('#loginForm');
-    if (DEMO) {
-      $('#demoNote').hidden = false;
-      form.password.required = false;
-      $('#demoNote').insertAdjacentHTML('beforeend', `<label class="field" style="margin-top:10px"><span>Entrar como</span><select name="demoRole">${options([['admin', 'Admin'], ['editor', 'Editor'], ['medico', 'Médico'], ['agente', 'Agente (Grok)']], 'admin')}</select></label>`);
-    }
+    if (DEMO) $('#demoNote').hidden = false;
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = form.email.value.trim(), pw = form.password.value;
-      if (!DEMO && (!email || !pw)) { $('#loginMsg').textContent = 'Completá email y contraseña.'; return; }
+      if (!email || !pw) { $('#loginMsg').textContent = 'Completá email y contraseña.'; return; }
       const btn = $('button[type=submit]', form);
       btn.disabled = true;
       try {
-        const profile = await api.signIn(email, pw, DEMO && form.demoRole.value);
+        const profile = await api.signIn(email, pw);
         await enter(profile);
       } catch (err) {
         $('#loginMsg').textContent = err.message;
@@ -754,6 +750,7 @@
     me = null;
     dirty = null;
     history.replaceState(null, '', location.pathname + location.search);
+    $('#loginForm').reset();
     showLogin();
   });
 
