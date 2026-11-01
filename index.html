@@ -61,10 +61,10 @@
 
       <div class="search" id="heroSearch">
         <label for="q" class="sr">Buscar un péptido</label>
-        <svg class="search-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <svg class="i search-ico" aria-hidden="true"><use href="assets/icons.svg#search"/></svg>
         <input id="q" type="search" autocomplete="off" placeholder="Buscá un péptido: nombre, código o alias" role="combobox" aria-expanded="false" aria-controls="sugg" aria-autocomplete="list">
         <kbd class="kbd" aria-hidden="true">/</kbd>
-        <button class="search-go" id="qGo" aria-label="Buscar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <button class="search-go" id="qGo" aria-label="Buscar"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></button>
         <ul class="sugg" id="sugg" role="listbox" hidden></ul>
       </div>
       <div class="freq">
@@ -76,28 +76,16 @@
       </div>
     </div>
 
-    <div class="hero-art" aria-hidden="true">
-      <img class="molecule" src="brand/logo/peptalk-isotipo.svg" alt="" width="240" height="200">
-      <div class="glance">
-        <div class="glance-h"><span>De un vistazo</span><span class="muted">Verificado: —</span></div>
-        <div class="glance-sys">Digestivo y peso</div>
-        <div class="glance-name">BPC-157</div>
-        <div class="glance-alias">Body Protection Compound-157 · PL 14736</div>
-        <div class="agencies">
-          <div><small>ANMAT</small><b><i class="dot d-pend"></i>Pendiente</b></div>
-          <div><small>FDA</small><b><i class="dot d-pend"></i>Pendiente</b></div>
-          <div><small>EMA</small><b><i class="dot d-pend"></i>Pendiente</b></div>
-          <div><small>WADA</small><b><i class="dot d-pend"></i>Pendiente</b></div>
-        </div>
-        <div class="glance-f"><span class="ev ev-none">Evidencia —</span><span class="link">Ver ficha →</span></div>
-      </div>
+    <div class="hero-art">
+      <img class="molecule" src="brand/logo/peptalk-isotipo.svg" alt="" aria-hidden="true" width="240" height="200">
+      <div class="spot" id="spot" aria-live="polite"></div>
     </div>
   </div>
 
   <div class="wrap trust">
-    <div><span class="ti"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg></span><div><b>Fuentes citadas en cada ficha</b><p>Boletín Oficial, ANMAT, FDA, EMA, WADA y estudios con DOI.</p></div></div>
-    <div><span class="ti"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span><div><b>Revisión médica con matrícula</b><p>Un profesional revisa cada ficha antes de publicarla.</p></div></div>
-    <div><span class="ti"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><b>Estados con fecha de verificación</b><p>Si no lo verificamos todavía, lo decimos.</p></div></div>
+    <div><span class="ti"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#file-text"/></svg></span><div><b>Fuentes citadas en cada ficha</b><p>Boletín Oficial, ANMAT, FDA, EMA, WADA y estudios con DOI.</p></div></div>
+    <div><span class="ti"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#stethoscope"/></svg></span><div><b>Revisión médica con matrícula</b><p>Un profesional revisa cada ficha antes de publicarla.</p></div></div>
+    <div><span class="ti"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#calendar-check"/></svg></span><div><b>Estados con fecha de verificación</b><p>Si no lo verificamos todavía, lo decimos.</p></div></div>
   </div>
 </section>
 
@@ -111,23 +99,8 @@
     <div class="dp-grid">
       <ul class="sys-list" id="sysList" role="tablist" aria-label="Sistemas del cuerpo"></ul>
       <div class="body-wrap">
-        <svg class="body" id="bodySvg" viewBox="0 0 320 500" role="img" aria-label="Silueta humana con zonas por sistema">
-          <defs>
-            <radialGradient id="gBody" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3a2a22"/><stop offset="1" stop-color="#1e1916"/></radialGradient>
-            <radialGradient id="gFloor" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FF6A00" stop-opacity=".45"/><stop offset="1" stop-color="#FF6A00" stop-opacity="0"/></radialGradient>
-          </defs>
-          <ellipse cx="160" cy="488" rx="110" ry="12" fill="url(#gFloor)"/>
-          <g id="silhouette" fill="url(#gBody)" stroke="rgba(255,255,255,.22)" stroke-width="1.3">
-            <circle cx="160" cy="46" r="27"/>
-            <path d="M148 70h24l2 14h-28z"/>
-            <path d="M116 88c10-6 26-8 44-8s34 2 44 8c10 6 14 16 14 30l-2 70c-1 22-6 46-10 66l-4 22H118l-4-22c-4-20-9-44-10-66l-2-70c0-14 4-24 14-30z"/>
-            <path d="M104 98c-12 6-16 18-18 32l-8 82c-2 22-4 44-2 64 1 8 12 8 13 0l6-62 10-60z"/>
-            <path d="M216 98c12 6 16 18 18 32l8 82c2 22 4 44 2 64-1 8-12 8-13 0l-6-62-10-60z"/>
-            <path d="M118 274h40l-4 110-3 80c0 10-16 10-17 0l-8-80z"/>
-            <path d="M202 274h-40l4 110 3 80c0 10 16 10 17 0l8-80z"/>
-          </g>
-          <g id="hotspots"></g>
-        </svg>
+        <div class="body-stage" id="bodyStage"><div class="body-loading">Cargando cuerpo 3D…</div></div>
+        <p class="body-hint">Pasá el mouse por el cuerpo y tocá una zona</p>
       </div>
       <div class="sys-card" id="sysCard" aria-live="polite"></div>
     </div>
@@ -138,32 +111,38 @@
 <section class="wrap section" id="biblioteca">
   <div class="lib-head">
     <div>
+      <span class="kicker">Biblioteca</span>
       <h2>Biblioteca de péptidos</h2>
       <p class="muted" id="libMeta"></p>
     </div>
-    <div class="lib-tools">
+  </div>
+
+  <div class="lib-bar">
+    <div class="lib-row">
       <div class="mini-search">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <svg class="i" aria-hidden="true"><use href="assets/icons.svg#search"/></svg>
         <label for="libQ" class="sr">Filtrar por nombre o alias</label>
-        <input id="libQ" type="search" placeholder="Filtrar por nombre o alias">
+        <input id="libQ" type="search" placeholder="Filtrar por nombre o alias" autocomplete="off">
+      </div>
+      <div class="filters" id="filters">
+        <select data-f="anmat" data-label="ANMAT" aria-label="Estado ANMAT"></select>
+        <select data-f="fda" data-label="FDA" aria-label="Estado FDA"></select>
+        <select data-f="wada" data-label="WADA" aria-label="Estado WADA"></select>
+        <select data-f="evid" data-label="Evidencia" aria-label="Nivel de evidencia"></select>
       </div>
       <div class="seg" role="group" aria-label="Vista">
-        <button class="on" data-view="cards" aria-pressed="true" aria-label="Vista de tarjetas"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></button>
-        <button data-view="table" aria-pressed="false" aria-label="Vista de tabla"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <button class="on" data-view="cards" aria-pressed="true" aria-label="Vista de tarjetas"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#layout-grid"/></svg></button>
+        <button data-view="table" aria-pressed="false" aria-label="Vista de tabla"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#list"/></svg></button>
       </div>
     </div>
+    <div class="chips-wrap"><div class="chips" id="sysChips" role="group" aria-label="Filtrar por sistema"></div></div>
   </div>
 
-  <div class="chips" id="sysChips" role="group" aria-label="Filtrar por sistema"></div>
-
-  <div class="filters">
-    <label><span>ANMAT</span><select data-f="anmat"></select></label>
-    <label><span>FDA</span><select data-f="fda"></select></label>
-    <label><span>WADA</span><select data-f="wada"></select></label>
-    <label><span>Evidencia</span><select data-f="evid"></select></label>
-    <button class="btn-link" id="clearAll" hidden>Limpiar todo</button>
+  <div class="lib-status">
+    <p class="small" id="count" aria-live="polite"></p>
+    <div class="active-filters" id="activeFilters"></div>
+    <button class="btn-link" id="clearAll" hidden><svg class="i" aria-hidden="true"><use href="assets/icons.svg#rotate-ccw"/></svg> Limpiar todo</button>
   </div>
-  <p class="muted small" id="count" aria-live="polite"></p>
 
   <div id="results"></div>
   <div class="empty" id="empty" hidden>
@@ -318,7 +297,7 @@
 <!-- FICHA (drawer) -->
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" hidden>
-  <button class="drawer-x" id="drawerX" aria-label="Cerrar ficha"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <button class="drawer-x" id="drawerX" aria-label="Cerrar ficha"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#x"/></svg></button>
   <div id="drawerBody"></div>
 </aside>
 

@@ -1,6 +1,7 @@
 /* peptalk — lógica de la landing.
-   Módulos: util · catalog · nav · search · systems · library · legend · drawer · forms · reveal.
-   Sin dependencias. El contenido sale de data.js (window.PT). */
+   Módulos: util · catalog · ui (íconos, estados, evidencia) · select · nav · search · spot ·
+   systems · library · legend · drawer · forms · reveal.
+   Sin dependencias. El contenido sale de data.js (window.PT); el cuerpo 3D, de body3d.js + Three.js r149. */
 (function () {
   'use strict';
 
@@ -9,8 +10,15 @@
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var norm = function (s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
-  var icon = function (d) { return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>'; };
   var plural = function (n, one, many) { return n + ' ' + (n === 1 ? one : many); };
+  var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var loadScript = function (src) {
+    return new Promise(function (ok, fail) {
+      if ($('script[src="' + src + '"]')) return ok();
+      var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = fail;
+      document.head.appendChild(s);
+    });
+  };
 
   /* ---------- catalog: datos derivados ---------- */
   var PT = window.PT;
@@ -18,13 +26,15 @@
   PT.systems.forEach(function (s) { sysById[s.id] = s; });
   var statusCls = {};
   PT.statuses.forEach(function (s) { statusCls[s.v] = s.cls; });
+  var evInfo = {};
+  PT.evidence.forEach(function (e) { evInfo[e.v] = e; });
 
   var peptides = PT.peptides.map(function (p) {
     var st = p.status || {};
     var sys = sysById[p.sys];
     return Object.assign({}, p, {
       sysName: sys ? sys.name : '',
-      sysIcon: sys ? sys.icon : '',
+      sysIcon: sys ? sys.icon : 'dna',
       ev: p.ev || '—',
       st: { ANMAT: st.ANMAT || 'Pendiente', FDA: st.FDA || 'Pendiente', EMA: st.EMA || 'Pendiente', WADA: st.WADA || 'Pendiente' },
       haystack: norm(p.name + ' ' + p.alias + ' ' + p.slug)
@@ -33,14 +43,136 @@
   var bySlug = {};
   peptides.forEach(function (p) { bySlug[p.slug] = p; });
   PT.systems.forEach(function (s) { s.count = peptides.filter(function (p) { return p.sys === s.id; }).length; });
-
   var matches = function (p, q) { q = norm(q.trim()); return q.length < 2 || p.haystack.indexOf(q) !== -1; };
+  var pendingCount = function (p) { return PT.agencies.filter(function (a) { return p.st[a] === 'Pendiente'; }).length; };
+
+  /* ---------- ui: piezas reutilizables ---------- */
+  var icon = function (name, cls) { return '<svg class="i' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><use href="assets/icons.svg#' + name + '"/></svg>'; };
+  var dot = function (v) { return '<i class="dot ' + statusCls[v] + '"></i>'; };
   var evBadge = function (ev) { return '<span class="ev ' + (ev === '—' ? 'ev-none' : 'ev-' + ev) + '">Evidencia ' + ev + '</span>'; };
-  var stBadge = function (v) { return '<i class="dot ' + statusCls[v] + '"></i>' + esc(v); };
-  var agencyGrid = function (p) {
-    return '<div class="agencies">' + PT.agencies.map(function (a) {
-      return '<div><small>' + a + '</small><b>' + stBadge(p.st[a]) + '</b></div>';
+  // medidor de evidencia: 5 barras, A llena todo, E una, pendiente ninguna
+  var EV_LEVEL = { A: 5, B: 4, C: 3, D: 2, E: 1, '—': 0 };
+  var evMeter = function (ev, withLabel) {
+    var lvl = EV_LEVEL[ev], bars = '';
+    for (var i = 1; i <= 5; i++) bars += '<i class="' + (i <= lvl ? 'on' : '') + '" style="height:' + (6 + i * 3) + 'px"></i>';
+    return '<span class="ev-meter' + (lvl ? '' : ' pending') + '" title="' + esc(evInfo[ev].name) + '"><span class="bars">' + bars + '</span>' +
+      (withLabel ? '<span class="ev-txt"><b>' + (lvl ? 'Evidencia ' + ev : 'Evidencia') + '</b><small>' + esc(evInfo[ev].name) + '</small></span>' : '') + '</span>';
+  };
+  // franja compacta: una pastilla por agencia, el punto dice el estado
+  var agencyStrip = function (p) {
+    return '<div class="ag-strip">' + PT.agencies.map(function (a) {
+      return '<span class="ag" title="' + a + ': ' + esc(p.st[a]) + '">' + dot(p.st[a]) + a + '</span>';
     }).join('') + '</div>';
+  };
+  // grilla detallada: agencia, jurisdicción y estado
+  var agencyGrid = function (p) {
+    return '<div class="ag-grid">' + PT.agencies.map(function (a) {
+      var info = PT.agencyInfo[a];
+      return '<div class="ag-cell"><span class="ag-h">' + icon(info.icon) + '<b>' + a + '</b><small>' + info.name + '</small></span>' +
+        '<span class="ag-v">' + dot(p.st[a]) + esc(p.st[a]) + '</span></div>';
+    }).join('') + '</div>';
+  };
+  var sysTile = function (p, size) { return '<span class="sys-tile' + (size ? ' ' + size : '') + '">' + icon(p.sysIcon || p.icon) + '</span>'; };
+
+  /* ---------- select: desplegable de marca sobre un <select> nativo ----------
+     El <select> queda en el DOM (formularios, valor, eventos 'change'); se oculta
+     y se dibuja un botón + listbox accesible. Para sincronizar tras cambiar el
+     valor por código: select.dispatchEvent(new Event('pt:sync')). */
+  var openSelect = null;
+  document.addEventListener('pointerdown', function (e) { if (openSelect && !openSelect.wrap.contains(e.target)) openSelect.close(); });
+
+  var brandSelect = function (sel, opts) {
+    opts = opts || {};
+    var wrap = document.createElement('div'), uid = 'bs' + Math.random().toString(36).slice(2, 8);
+    wrap.className = 'bsel' + (opts.compact ? ' bsel-compact' : '');
+    var label = sel.dataset.label;
+    wrap.innerHTML =
+      '<button type="button" class="bsel-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="' + uid + '">' +
+      (label ? '<span class="bsel-label">' + esc(label) + '</span>' : '') + '<span class="bsel-val"></span>' + icon('chevron-down', 'bsel-chev') + '</button>' +
+      '<ul class="bsel-list" id="' + uid + '" role="listbox" tabindex="-1" hidden></ul>';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(sel);
+    sel.classList.add('sr'); sel.tabIndex = -1; sel.setAttribute('aria-hidden', 'true');
+    var btn = $('.bsel-btn', wrap), list = $('.bsel-list', wrap), val = $('.bsel-val', wrap), active = -1, typed = '', typedAt = 0;
+    var aria = sel.getAttribute('aria-label') || (sel.id && $('label[for="' + sel.id + '"]') ? $('label[for="' + sel.id + '"]').textContent : label);
+    btn.setAttribute('aria-label', aria);
+    list.setAttribute('aria-label', aria);
+    if (sel.id) { var lab = $('label[for="' + sel.id + '"]'); if (lab) lab.addEventListener('click', function (e) { e.preventDefault(); btn.focus(); }); }
+
+    var render = function () {
+      list.innerHTML = Array.prototype.map.call(sel.options, function (o, i) {
+        var deco = opts.decorate ? opts.decorate(o) : '';
+        return '<li role="option" id="' + uid + '-' + i + '" data-i="' + i + '" aria-selected="' + (i === sel.selectedIndex) + '"' + (o.disabled ? ' aria-disabled="true"' : '') + '>' +
+          deco + '<span>' + esc(o.text) + '</span>' + icon('check', 'bsel-check') + '</li>';
+      }).join('');
+    };
+    var sync = function () {
+      var o = sel.options[sel.selectedIndex];
+      val.innerHTML = o ? (opts.decorate ? opts.decorate(o) : '') + esc(o.text) : '';
+      wrap.classList.toggle('is-set', sel.selectedIndex > 0 && !!sel.value);
+      btn.setAttribute('aria-invalid', sel.getAttribute('aria-invalid') === 'true');
+      $$('[role=option]', list).forEach(function (li, i) { li.setAttribute('aria-selected', i === sel.selectedIndex); });
+    };
+    var move = function (i) {
+      var items = $$('[role=option]', list);
+      if (!items.length) return;
+      active = Math.max(0, Math.min(items.length - 1, i));
+      items.forEach(function (li, k) { li.classList.toggle('active', k === active); });
+      list.setAttribute('aria-activedescendant', items[active].id);
+      var li = items[active], top = li.offsetTop, bottom = top + li.offsetHeight;
+      if (top < list.scrollTop) list.scrollTop = top; else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+    };
+    var api = {
+      wrap: wrap,
+      open: function () {
+        if (openSelect && openSelect !== api) openSelect.close();
+        render(); list.hidden = false; wrap.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
+        // abre hacia arriba si no hay lugar abajo
+        var r = btn.getBoundingClientRect();
+        wrap.classList.toggle('up', window.innerHeight - r.bottom < Math.min(320, list.scrollHeight + 16) && r.top > 340);
+        move(Math.max(0, sel.selectedIndex));
+        list.focus({ preventScroll: true });
+        openSelect = api;
+      },
+      close: function (refocus) {
+        list.hidden = true; wrap.classList.remove('open'); btn.setAttribute('aria-expanded', 'false');
+        if (openSelect === api) openSelect = null;
+        if (refocus) btn.focus();
+      }
+    };
+    var choose = function (i) {
+      if (sel.options[i] && !sel.options[i].disabled && i !== sel.selectedIndex) {
+        sel.selectedIndex = i;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      sync(); api.close(true);
+    };
+
+    btn.addEventListener('click', function () { if (list.hidden) api.open(); else api.close(true); });
+    btn.addEventListener('keydown', function (e) {
+      if (['ArrowDown', 'ArrowUp', 'Enter', ' '].indexOf(e.key) !== -1) { e.preventDefault(); api.open(); }
+    });
+    list.addEventListener('keydown', function (e) {
+      var n = sel.options.length;
+      if (e.key === 'ArrowDown') { e.preventDefault(); move(active + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); move(active - 1); }
+      else if (e.key === 'Home') { e.preventDefault(); move(0); }
+      else if (e.key === 'End') { e.preventDefault(); move(n - 1); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(active); }
+      else if (e.key === 'Escape') { e.preventDefault(); api.close(true); }
+      else if (e.key === 'Tab') api.close();
+      else if (e.key.length === 1) { // búsqueda por tipeo
+        var now = Date.now(); typed = (now - typedAt > 700 ? '' : typed) + norm(e.key); typedAt = now;
+        for (var k = 0; k < n; k++) if (norm(sel.options[k].text).indexOf(typed) === 0) { move(k); break; }
+      }
+    });
+    list.addEventListener('click', function (e) { var li = e.target.closest('[role=option]'); if (li) choose(+li.dataset.i); });
+    list.addEventListener('mousemove', function (e) { var li = e.target.closest('[role=option]'); if (li && +li.dataset.i !== active) move(+li.dataset.i); });
+    sel.addEventListener('change', sync);
+    sel.addEventListener('pt:sync', sync);
+    new MutationObserver(sync).observe(sel, { attributes: true, attributeFilter: ['aria-invalid'] });
+    render(); sync();
+    return api;
   };
 
   /* ---------- nav ---------- */
@@ -51,7 +183,6 @@
     links.addEventListener('click', function (e) { if (e.target.tagName === 'A') setOpen(false); });
     window.addEventListener('scroll', function () { bar.classList.toggle('scrolled', window.scrollY > 8); }, { passive: true });
 
-    // resalta la sección visible
     var anchors = $$('a', links);
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
@@ -74,7 +205,7 @@
       items = peptides.filter(function (p) { return matches(p, q); }).slice(0, 6);
       list.innerHTML = items.length
         ? items.map(function (p, i) {
-            return '<li role="option" id="sg' + i + '" data-slug="' + p.slug + '" aria-selected="' + (i === active) + '"><div><b>' + esc(p.name) + '</b><br><small>' + esc(p.alias) + '</small></div><span class="sugg-sys">' + esc(p.sysName) + '</span></li>';
+            return '<li role="option" id="sg' + i + '" data-slug="' + p.slug + '" aria-selected="' + (i === active) + '">' + sysTile(p, 'sm') + '<div><b>' + esc(p.name) + '</b><br><small>' + esc(p.alias) + '</small></div><span class="sugg-sys">' + esc(p.sysName) + '</span></li>';
           }).join('') + '<li role="option" id="sgAll" data-all="1"><small>Ver todos los resultados para «' + esc(q) + '» →</small></li>'
         : '<li class="sugg-empty">No encontramos «' + esc(q) + '». Probá con otro nombre o alias.</li>';
       list.hidden = false;
@@ -106,47 +237,94 @@
     go.addEventListener('click', toLibrary);
     $$('.freq [data-q]').forEach(function (b) { b.addEventListener('click', function () { input.value = b.dataset.q; input.focus(); render(); }); });
 
-    // atajo «/» para buscar
     document.addEventListener('keydown', function (e) {
       if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); input.focus(); }
     });
   })();
 
-  /* ---------- systems (mapa del cuerpo) ---------- */
+  /* ---------- spot: ficha destacada que rota en el hero ---------- */
+  (function spot() {
+    var el = $('#spot'), list = PT.featured.map(function (s) { return bySlug[s]; }).filter(Boolean), i = 0, timer = 0, paused = false;
+    if (!list.length) return;
+
+    var render = function () {
+      var p = list[i];
+      el.innerHTML =
+        '<div class="spot-top"><span class="spot-eyebrow">' + icon('microscope') + 'Ficha destacada</span>' +
+        '<span class="spot-pager">' + list.map(function (_, k) { return '<button type="button" data-k="' + k + '" aria-label="Ver ficha ' + (k + 1) + '"' + (k === i ? ' aria-current="true"' : '') + '></button>'; }).join('') + '</span></div>' +
+        '<div class="spot-body">' +
+          '<div class="spot-id">' + sysTile(p, 'lg') + '<div><span class="spot-sys">' + esc(p.sysName) + '</span><h3>' + esc(p.name) + '</h3><p>' + esc(p.alias) + '</p></div></div>' +
+          agencyGrid(p) +
+          '<div class="spot-foot">' + evMeter(p.ev, true) +
+          '<a class="spot-cta" href="#p/' + p.slug + '" data-slug="' + p.slug + '">Ver ficha' + icon('arrow-up-right') + '</a></div>' +
+        '</div>' +
+        '<div class="spot-progress"><i' + (paused || reduceMotion ? ' class="still"' : '') + '></i></div>';
+    };
+    var go = function (k) { i = (k + list.length) % list.length; el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap'); render(); schedule(); };
+    var schedule = function () {
+      clearTimeout(timer);
+      if (!paused && !reduceMotion) timer = setTimeout(function () { go(i + 1); }, 6000);
+    };
+    el.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-k]'); if (b) { go(+b.dataset.k); return; }
+      var a = e.target.closest('[data-slug]'); if (a) { e.preventDefault(); Drawer.open(a.dataset.slug); }
+    });
+    var pause = function (v) { paused = v; var bar = $('.spot-progress i', el); if (bar) bar.classList.toggle('still', v); schedule(); };
+    el.addEventListener('mouseenter', function () { pause(true); });
+    el.addEventListener('mouseleave', function () { pause(false); });
+    el.addEventListener('focusin', function () { pause(true); });
+    el.addEventListener('focusout', function () { pause(false); });
+    render(); schedule();
+  })();
+
+  /* ---------- systems: lista + cuerpo 3D + tarjeta ---------- */
   (function systems() {
-    var listEl = $('#sysList'), hotEl = $('#hotspots'), card = $('#sysCard');
-    var current = 'digestivo';
-    var svgNS = 'http://www.w3.org/2000/svg';
+    var listEl = $('#sysList'), card = $('#sysCard'), stage = $('#bodyStage');
+    var current = 'digestivo', body = null, fallback = null;
 
     listEl.innerHTML = PT.systems.map(function (s) {
       return '<li role="presentation"><button role="tab" data-sys="' + s.id + '"><span class="sys-ic">' + icon(s.icon) + '</span>' + esc(s.name) + '<span class="n">' + s.count + '</span></button></li>';
     }).join('');
 
-    PT.systems.forEach(function (s) {
-      var g = document.createElementNS(svgNS, 'g');
-      g.setAttribute('class', 'hot'); g.setAttribute('data-sys', s.id);
-      g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.setAttribute('aria-label', s.name);
-      g.innerHTML = '<circle class="pulse" cx="' + s.x + '" cy="' + s.y + '" r="9"/><circle class="ring" cx="' + s.x + '" cy="' + s.y + '" r="11"/><circle class="core" cx="' + s.x + '" cy="' + s.y + '" r="4"/>';
-      hotEl.appendChild(g);
-    });
-
     var select = function (id) {
       current = id;
       var s = sysById[id];
       $$('button', listEl).forEach(function (b) { b.setAttribute('aria-selected', b.dataset.sys === id); });
-      $$('.hot', hotEl).forEach(function (h) { h.classList.toggle('on', h.dataset.sys === id); });
+      if (body) body.select(id);
+      if (fallback) $$('.sys', fallback).forEach(function (g) { g.classList.toggle('on', g.dataset.sys === id); });
       var some = peptides.filter(function (p) { return p.sys === id; }).slice(0, 6);
       card.innerHTML =
         '<div class="top"><span class="sys-ic">' + icon(s.icon) + '</span><div><h3>' + esc(s.name) + '</h3><div class="cnt">' + plural(s.count, 'péptido', 'péptidos') + ' en la biblioteca</div></div></div>' +
         '<p>' + esc(s.desc) + '</p>' +
         '<div class="lbl">Algunos de este sistema</div>' +
         '<div class="pep-pills">' + some.map(function (p) { return '<button data-slug="' + p.slug + '">' + esc(p.name) + '</button>'; }).join('') + '</div>' +
-        '<button class="btn btn-orange" data-go="' + id + '">Ver péptidos de ' + esc(s.name) + '</button>';
+        '<button class="btn btn-orange" data-go="' + id + '">Ver péptidos de ' + esc(s.name) + icon('arrow-right') + '</button>';
     };
 
+    // sin WebGL: silueta SVG generada por scripts/body.py
+    var useFallback = function () {
+      return fetch('assets/body.svg').then(function (r) { return r.text(); }).then(function (svg) {
+        stage.innerHTML = svg;
+        stage.classList.add('is-svg');
+        fallback = $('svg', stage);
+        fallback.addEventListener('click', function (e) { var g = e.target.closest('.sys'); if (g) select(g.dataset.sys); });
+        select(current);
+      });
+    };
+    var boot = function () {
+      loadScript('vendor/three.min.js').then(function () { return loadScript('body3d.js'); }).then(function () {
+        stage.innerHTML = '';
+        body = window.PTBody.mount(stage, PT.systems, { onPick: select });
+        if (!body) throw new Error('sin WebGL');
+        stage.classList.add('is-3d');
+        body.select(current);
+      }).catch(useFallback);
+    };
+    // Three.js se carga recién cuando la sección está por entrar en pantalla
+    var io = new IntersectionObserver(function (en) { if (en[0].isIntersecting) { io.disconnect(); boot(); } }, { rootMargin: '600px' });
+    io.observe(stage);
+
     listEl.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) select(b.dataset.sys); });
-    hotEl.addEventListener('click', function (e) { var g = e.target.closest('.hot'); if (g) select(g.dataset.sys); });
-    hotEl.addEventListener('keydown', function (e) { var g = e.target.closest('.hot'); if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); select(g.dataset.sys); } });
     card.addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
       if (b.dataset.slug) Drawer.open(b.dataset.slug);
@@ -157,23 +335,28 @@
 
   /* ---------- library (filtros + resultados) ---------- */
   var Library = (function library() {
-    var state = { q: '', sys: 'all', anmat: 'all', fda: 'all', wada: 'all', evid: 'all', view: 'cards' };
-    var qEl = $('#libQ'), chipsEl = $('#sysChips'), results = $('#results'), empty = $('#empty'), countEl = $('#count'), clearBtn = $('#clearAll');
+    var DEFAULTS = { q: '', sys: 'all', anmat: 'all', fda: 'all', wada: 'all', evid: 'all' };
+    var state = Object.assign({ view: 'cards' }, DEFAULTS);
+    var qEl = $('#libQ'), chipsEl = $('#sysChips'), results = $('#results'), empty = $('#empty'), countEl = $('#count'), clearBtn = $('#clearAll'), activeEl = $('#activeFilters');
+    var selects = $$('#filters select');
 
     $('#libMeta').textContent = plural(peptides.length, 'péptido', 'péptidos') + ' · ' + PT.systems.length + ' sistemas · Estados en verificación';
 
-    var statusOpts = '<option value="all">todos</option>' + PT.statuses.map(function (s) { return '<option>' + s.v + '</option>'; }).join('');
-    $$('.filters select').forEach(function (sel) {
-      sel.innerHTML = sel.dataset.f === 'evid'
-        ? '<option value="all">todas</option>' + PT.evidence.map(function (e) { return '<option value="' + e.v + '">' + (e.v === '—' ? 'Pendiente' : e.v + ' · ' + e.name) + '</option>'; }).join('')
-        : statusOpts;
+    var statusDeco = function (o) { return o.value === 'all' ? '' : dot(o.value); };
+    var evDeco = function (o) { return o.value === 'all' ? '' : '<span class="ev-mini ' + (o.value === '—' ? 'ev-none' : 'ev-' + o.value) + '">' + o.value + '</span>'; };
+    selects.forEach(function (sel) {
+      var isEv = sel.dataset.f === 'evid';
+      sel.innerHTML = isEv
+        ? '<option value="all">Todas</option>' + PT.evidence.map(function (e) { return '<option value="' + e.v + '">' + (e.v === '—' ? 'Pendiente' : e.name) + '</option>'; }).join('')
+        : '<option value="all">Todos</option>' + PT.statuses.map(function (s) { return '<option value="' + s.v + '">' + s.v + '</option>'; }).join('');
+      brandSelect(sel, { decorate: isEv ? evDeco : statusDeco, compact: true });
       sel.addEventListener('change', function () { state[sel.dataset.f] = sel.value; render(); });
     });
 
     var renderChips = function () {
-      var all = [{ id: 'all', name: 'Todos', count: peptides.length }].concat(PT.systems);
+      var all = [{ id: 'all', name: 'Todos', count: peptides.length, icon: 'layout-grid' }].concat(PT.systems);
       chipsEl.innerHTML = all.map(function (s) {
-        return '<button class="chip" data-sys="' + s.id + '" aria-pressed="' + (state.sys === s.id) + '">' + esc(s.name) + '<span class="n">' + s.count + '</span></button>';
+        return '<button class="chip" data-sys="' + s.id + '" aria-pressed="' + (state.sys === s.id) + '">' + icon(s.icon) + '<span>' + esc(s.name) + '</span><span class="n">' + s.count + '</span></button>';
       }).join('');
     };
     chipsEl.addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) { state.sys = b.dataset.sys; render(); } });
@@ -198,33 +381,58 @@
     };
 
     var cardHtml = function (p, i) {
-      return '<button class="card" data-slug="' + p.slug + '" style="animation-delay:' + Math.min(i * 25, 300) + 'ms">' +
-        '<div class="card-top"><span class="s">' + icon(p.sysIcon) + esc(p.sysName) + '</span>' + evBadge(p.ev) + '</div>' +
-        '<h3>' + esc(p.name) + '</h3><div class="alias">' + esc(p.alias) + '</div>' +
-        '<div class="type">' + esc(p.type) + '</div>' + agencyGrid(p) +
-        '<div class="card-f"><span>Sin verificar</span><span class="link">Ver ficha →</span></div></button>';
+      var pend = pendingCount(p);
+      return '<button class="card" data-slug="' + p.slug + '" data-sys="' + p.sys + '" style="animation-delay:' + Math.min(i * 25, 300) + 'ms">' +
+        '<span class="card-band">' + icon(p.sysIcon, 'card-mark') + sysTile(p) + '<span class="card-sys">' + esc(p.sysName) + '</span>' + evMeter(p.ev) + '</span>' +
+        '<span class="card-main"><h3>' + esc(p.name) + '</h3><span class="alias">' + esc(p.alias) + '</span>' +
+        '<span class="card-type">' + icon(p.type === 'Cosmético' ? 'sparkles' : 'dna') + esc(p.type) + '</span></span>' +
+        agencyStrip(p) +
+        '<span class="card-f"><span class="verif">' + icon(pend ? 'clock' : 'shield-check') + (pend ? plural(pend, 'estado pendiente', 'estados pendientes') : 'Verificado') + '</span>' +
+        '<span class="go">' + icon('arrow-up-right') + '</span></span></button>';
     };
     var tableHtml = function (list) {
       return '<div class="table-wrap"><table><thead><tr><th>Péptido</th><th>Sistema</th>' + PT.agencies.map(function (a) { return '<th>' + a + '</th>'; }).join('') + '<th>Evidencia</th></tr></thead><tbody>' +
         list.map(function (p) {
-          return '<tr data-slug="' + p.slug + '" tabindex="0"><td><b>' + esc(p.name) + '</b><small>' + esc(p.alias) + '</small></td><td>' + esc(p.sysName) + '</td>' +
-            PT.agencies.map(function (a) { return '<td><span class="st">' + stBadge(p.st[a]) + '</span></td>'; }).join('') + '<td>' + evBadge(p.ev) + '</td></tr>';
+          return '<tr data-slug="' + p.slug + '" tabindex="0"><td><span class="t-pep">' + sysTile(p, 'sm') + '<span><b>' + esc(p.name) + '</b><small>' + esc(p.alias) + '</small></span></span></td><td>' + esc(p.sysName) + '</td>' +
+            PT.agencies.map(function (a) { return '<td><span class="st">' + dot(p.st[a]) + esc(p.st[a]) + '</span></td>'; }).join('') + '<td>' + evMeter(p.ev) + '</td></tr>';
         }).join('') + '</tbody></table></div>';
     };
 
+    // filtros activos como fichas que se pueden quitar
+    var LABELS = { anmat: 'ANMAT', fda: 'FDA', wada: 'WADA', evid: 'Evidencia' };
+    var renderActive = function () {
+      var tags = [];
+      if (state.q.trim()) tags.push(['q', '«' + state.q.trim() + '»']);
+      if (state.sys !== 'all') tags.push(['sys', sysById[state.sys].name]);
+      ['anmat', 'fda', 'wada', 'evid'].forEach(function (k) {
+        if (state[k] !== 'all') tags.push([k, LABELS[k] + ': ' + (k === 'evid' ? (state[k] === '—' ? 'Pendiente' : state[k]) : state[k])]);
+      });
+      activeEl.innerHTML = tags.map(function (t) { return '<button class="af" data-k="' + t[0] + '" aria-label="Quitar filtro ' + esc(t[1]) + '">' + esc(t[1]) + icon('x') + '</button>'; }).join('');
+      clearBtn.hidden = !tags.length;
+    };
+    activeEl.addEventListener('click', function (e) {
+      var b = e.target.closest('.af'); if (!b) return;
+      var k = b.dataset.k;
+      state[k] = DEFAULTS[k];
+      if (k === 'q') qEl.value = '';
+      var sel = $('#filters select[data-f="' + k + '"]');
+      if (sel) { sel.value = 'all'; sel.dispatchEvent(new Event('pt:sync')); }
+      render();
+    });
+
     var render = function () {
       renderChips();
+      renderActive();
       var list = filtered();
-      var dirty = state.q || ['sys', 'anmat', 'fda', 'wada', 'evid'].some(function (k) { return state[k] !== 'all'; });
-      clearBtn.hidden = !dirty;
-      countEl.textContent = 'Mostrando ' + plural(list.length, 'péptido', 'péptidos');
+      countEl.innerHTML = '<b>' + list.length + '</b> de ' + plural(peptides.length, 'péptido', 'péptidos');
       empty.hidden = list.length > 0;
       results.innerHTML = !list.length ? '' : state.view === 'cards' ? '<div class="cards">' + list.map(cardHtml).join('') + '</div>' : tableHtml(list);
     };
 
     var clear = function () {
-      Object.assign(state, { q: '', sys: 'all', anmat: 'all', fda: 'all', wada: 'all', evid: 'all' });
-      qEl.value = ''; $$('.filters select').forEach(function (s) { s.value = 'all'; });
+      Object.assign(state, DEFAULTS);
+      qEl.value = '';
+      selects.forEach(function (s) { s.value = 'all'; s.dispatchEvent(new Event('pt:sync')); });
       render();
     };
     clearBtn.addEventListener('click', clear);
@@ -240,8 +448,8 @@
   })();
 
   /* ---------- legend ---------- */
-  $('#legendStates').innerHTML = PT.statuses.map(function (s) { return '<li><i class="dot ' + s.cls + '"></i><b>' + s.v + '</b><small>' + s.desc + '</small></li>'; }).join('');
-  $('#legendEv').innerHTML = PT.evidence.map(function (e) { return '<li><span class="ev ' + (e.v === '—' ? 'ev-none' : 'ev-' + e.v) + '">' + e.v + '</span><span>' + e.name + '</span></li>'; }).join('');
+  $('#legendStates').innerHTML = PT.statuses.map(function (s) { return '<li>' + dot(s.v) + '<b>' + s.v + '</b><small>' + s.desc + '</small></li>'; }).join('');
+  $('#legendEv').innerHTML = PT.evidence.map(function (e) { return '<li>' + evMeter(e.v) + '<span><b>' + (e.v === '—' ? 'Pendiente' : e.v) + '</b> · ' + e.name + '</span></li>'; }).join('');
 
   /* ---------- drawer (ficha, enlazable por #p/slug) ---------- */
   var Drawer = (function drawer() {
@@ -252,19 +460,20 @@
     var show = function (slug) {
       var p = bySlug[slug]; if (!p) return;
       lastFocus = document.activeElement;
+      var pend = pendingCount(p);
       body.innerHTML =
-        '<div class="crumbs">Inicio › Péptidos › ' + esc(p.sysName) + '</div>' +
-        '<h2 id="dTitle">' + esc(p.name) + '</h2><div class="alias">' + esc(p.alias) + '</div>' +
-        '<div class="badges"><span class="tag">' + esc(p.sysName) + '</span>' + evBadge(p.ev) + '<span class="pill">Pendiente de revisión médica</span></div>' +
-        agencyGrid(p) +
-        '<div class="meta">Publicado: — · Actualizado: — · Estados verificados: —</div>' +
-        '<div class="d-block"><h3>Resumen clave</h3><p>Ficha en preparación. peptalk lab está reuniendo las fuentes primarias para explicar qué es ' + esc(p.name) + ' y qué se sabe hasta hoy.</p></div>' +
-        '<div class="d-block"><h3>De un vistazo</h3><div class="d-rows">' +
-          '<div><span>Tipo</span><b>' + esc(p.type) + '</b></div>' +
-          '<div><span>Sistema</span><b>' + esc(p.sysName) + '</b></div>' +
-          PT.agencies.map(function (a) { return '<div><span>' + a + '</span><b class="st">' + stBadge(p.st[a]) + '</b></div>'; }).join('') +
-        '</div></div>' +
-        '<div class="d-cta"><b>Consultá con un especialista</b><p>Te ponemos en contacto con un médico matriculado en Argentina, por teleconsulta o presencial.</p><a class="btn btn-orange" href="#derivacion" data-ref="' + esc(p.name) + '">Pedir una derivación</a></div>' +
+        '<div class="d-hero">' + icon(p.sysIcon, 'card-mark') +
+          '<div class="crumbs">Péptidos › ' + esc(p.sysName) + '</div>' +
+          '<div class="d-id">' + sysTile(p, 'lg') + '<div><h2 id="dTitle">' + esc(p.name) + '</h2><div class="alias">' + esc(p.alias) + '</div></div></div>' +
+          '<div class="badges"><span class="tag">' + icon(p.sysIcon) + esc(p.sysName) + '</span><span class="tag tag-ghost">' + icon('dna') + esc(p.type) + '</span><span class="pill">' + icon('stethoscope') + 'Pendiente de revisión médica</span></div>' +
+        '</div>' +
+        '<div class="d-stats">' +
+          '<div><small>Evidencia</small>' + evMeter(p.ev, true) + '</div>' +
+          '<div><small>Estados verificados</small><b class="big">' + (4 - pend) + '<span>/4</span></b></div>' +
+        '</div>' +
+        '<div class="d-block"><h3>' + icon('scale') + 'Estado regulatorio</h3>' + agencyGrid(p) + '<p class="d-note">' + icon('info') + 'Cada estado se publica con su fuente y fecha cuando peptalk lab lo verifica.</p></div>' +
+        '<div class="d-block"><h3>' + icon('book-open') + 'Resumen clave</h3><p>Ficha en preparación. peptalk lab está reuniendo las fuentes primarias para explicar qué es ' + esc(p.name) + ' y qué se sabe hasta hoy.</p></div>' +
+        '<div class="d-cta"><span class="d-cta-ic">' + icon('stethoscope') + '</span><div><b>Consultá con un especialista</b><p>Te ponemos en contacto con un médico matriculado en Argentina, por teleconsulta o presencial.</p><a class="btn btn-orange" href="#derivacion" data-ref="' + esc(p.name) + '">Pedir una derivación' + icon('arrow-right') + '</a></div></div>' +
         '<p class="d-foot">Información, no indicación. No indicamos dosis, usos ni dónde conseguir productos.</p>';
       el.hidden = false; scrim.hidden = false;
       document.body.style.overflow = 'hidden';
@@ -310,12 +519,13 @@
     return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(data) })
       .then(function (r) { if (!r.ok) throw new Error(r.status); });
   };
+  var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   (function newsletter() {
     var form = $('#newsForm'), input = $('#nEmail'), msg = $('#newsMsg');
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim());
+      var ok = EMAIL.test(input.value.trim());
       input.setAttribute('aria-invalid', !ok);
       if (!ok) { msg.textContent = 'Revisá el email.'; input.focus(); return; }
       if (!PT.endpoints.newsletter) { msg.textContent = 'Todavía no abrimos las suscripciones. Volvé pronto.'; return; }
@@ -327,8 +537,9 @@
   })();
 
   (function referral() {
-    var form = $('#refForm'), summary = $('#errSummary'), msg = $('#refMsg'), motivo = $('#fMotivo');
-    $('#fProv').insertAdjacentHTML('beforeend', PT.provinces.map(function (p) { return '<option>' + p + '</option>'; }).join(''));
+    var form = $('#refForm'), summary = $('#errSummary'), msg = $('#refMsg'), motivo = $('#fMotivo'), prov = $('#fProv');
+    prov.insertAdjacentHTML('beforeend', PT.provinces.map(function (p) { return '<option>' + p + '</option>'; }).join(''));
+    brandSelect(prov);
     $('#pepList').innerHTML = peptides.map(function (p) { return '<option value="' + esc(p.name) + '">'; }).join('');
     motivo.addEventListener('input', function () { $('#motivoLen').textContent = motivo.value.length + '/300'; });
 
@@ -337,7 +548,7 @@
       if (!f.name.value.trim()) err.name = 'Escribí tu nombre.';
       var email = f.email.value.trim(), phone = f.phone.value.trim();
       if (!email && !phone) err.contact = 'Dejanos un email o un teléfono.';
-      else if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err.contact = 'Revisá el email.';
+      else if (email && !EMAIL.test(email)) err.contact = 'Revisá el email.';
       else if (phone && phone.replace(/\D/g, '').length < 8) err.contact = 'Revisá el teléfono.';
       if (!f.prov.value) err.prov = 'Elegí tu provincia.';
       if (!f.adult.checked) err.adult = 'Tenés que ser mayor de 18 años.';
@@ -365,7 +576,7 @@
         name: f.name.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim(), prov: f.prov.value,
         pep: f.pep.value.trim(), mod: f.mod.value, motivo: motivo.value.trim()
       }).then(function () {
-        form.reset(); $('#motivoLen').textContent = '0/300';
+        form.reset(); prov.dispatchEvent(new Event('pt:sync')); $('#motivoLen').textContent = '0/300';
         msg.textContent = 'Listo, recibimos tu pedido. Te vamos a confirmar por email.';
       }).catch(function () {
         msg.textContent = 'No pudimos enviar el pedido. Probá de nuevo en un rato.';
@@ -375,7 +586,7 @@
 
   /* ---------- reveal ---------- */
   (function reveal() {
-    if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!('IntersectionObserver' in window) || reduceMotion) return;
     var els = $$('.trust > div, .dark-panel, .legend-card, .states-copy, .news > *, .referral, .guide, .method li, .disclaimer');
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });

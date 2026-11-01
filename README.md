@@ -28,3 +28,9 @@ python3 -m venv .venv && .venv/bin/pip install fonttools uharfbuzz
 .venv/bin/python brand/scripts/build.py          # con PNG (usa Google Chrome)
 .venv/bin/python brand/scripts/build.py --no-png  # solo tokens y SVG
 ```
+
+## Cuerpo 3D e íconos
+
+- `body3d.js`: cuerpo de partículas con Three.js r149 (`vendor/three.min.js`, cargado recién cuando la sección de sistemas se acerca a la pantalla). La anatomía son volúmenes (elipsoides y cápsulas) muestreados en superficie; las zonas que se encienden por sistema están en `data.js` (`systems[].zones`).
+- Sin WebGL se muestra `assets/body.svg`, generado con `python3 scripts/body.py`.
+- Íconos: Lucide (ISC), en el sprite `assets/icons.svg`. Para sumar uno, bajar el SVG de lucide-static a una carpeta y correr `python3 scripts/icons.py <carpeta>`.

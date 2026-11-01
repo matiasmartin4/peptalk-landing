@@ -4,16 +4,17 @@
    Cada estado verificado debería llevar fuente y fecha (campo `verified`). */
 
 window.PT = {
-  // x/y: posición del punto en la silueta (viewBox 320×500)
+  // zones: esferas [x, y, z, radio] en metros sobre el cuerpo 3D (pies en y=0, alto 1,8).
+  // La primera zona es donde va el marcador del sistema.
   systems: [
-    { id: 'cerebro',   name: 'Cerebro y sueño',        x: 160, y: 44,  desc: 'Péptidos que se estudian en sueño, ansiedad, memoria y neuroprotección.',            icon: 'M20 13.5A8 8 0 1 1 10.5 4a6.5 6.5 0 0 0 9.5 9.5z' },
-    { id: 'hormonas',  name: 'Hormonas y metabolismo', x: 160, y: 96,  desc: 'Señales hormonales: hormona de crecimiento, oxitocina y el eje hipotálamo-hipófisis.', icon: 'M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3M7.5 15h9' },
-    { id: 'inmune',    name: 'Inmune y defensa',       x: 140, y: 128, desc: 'Moduladores de la respuesta inmune y péptidos antimicrobianos.',                     icon: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z' },
-    { id: 'corazon',   name: 'Corazón y sangre',       x: 176, y: 146, desc: 'Anticoagulantes, péptidos natriuréticos y otros con uso cardiovascular.',             icon: 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z' },
-    { id: 'digestivo', name: 'Digestivo y peso',       x: 160, y: 204, desc: 'Agonistas de GLP-1, péptidos gástricos y los que se estudian en peso corporal.',        icon: 'M4 18a8 8 0 1 1 16 0M12 18l3.5-4.5M4 18h16' },
-    { id: 'sexual',    name: 'Sexual y reproductivo',  x: 160, y: 262, desc: 'Péptidos vinculados al deseo, la fertilidad y el eje reproductivo.',                  icon: 'M9.5 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM14.5 19a5 5 0 1 0 0-10 5 5 0 0 0 0 10z' },
-    { id: 'piel',      name: 'Piel y envejecimiento',  x: 92,  y: 196, desc: 'Péptidos cosméticos y los que se estudian en cicatrización y envejecimiento.',         icon: 'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM18.5 16l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z' },
-    { id: 'huesos',    name: 'Huesos y músculo',       x: 140, y: 372, desc: 'Reparación de tendones, músculo y hueso, en su mayoría con evidencia preclínica.',     icon: 'M6.5 7v10M17.5 7v10M3.5 10v4M20.5 10v4M6.5 12h11' }
+    { id: 'cerebro',   name: 'Cerebro y sueño', zones: [[0, 1.66, 0.02, 0.15]],  desc: 'Péptidos que se estudian en sueño, ansiedad, memoria y neuroprotección.',            icon: 'brain' },
+    { id: 'hormonas',  name: 'Hormonas y metabolismo', zones: [[0, 1.5, 0.05, 0.07], [0, 1.08, 0.06, 0.08]],  desc: 'Señales hormonales: hormona de crecimiento, oxitocina y el eje hipotálamo-hipófisis.', icon: 'flask-conical' },
+    { id: 'inmune',    name: 'Inmune y defensa', zones: [[0, 1.36, 0.08, 0.08], [-0.15, 1.33, 0, 0.06], [0.15, 1.33, 0, 0.06], [-0.09, 0.88, 0.07, 0.06], [0.09, 0.88, 0.07, 0.06]], desc: 'Moduladores de la respuesta inmune y péptidos antimicrobianos.',                     icon: 'shield-plus' },
+    { id: 'corazon',   name: 'Corazón y sangre', zones: [[0.04, 1.29, 0.08, 0.1]], desc: 'Anticoagulantes, péptidos natriuréticos y otros con uso cardiovascular.',             icon: 'heart-pulse' },
+    { id: 'digestivo', name: 'Digestivo y peso', zones: [[0, 1.06, 0.07, 0.16]], desc: 'Agonistas de GLP-1, péptidos gástricos y los que se estudian en peso corporal.',        icon: 'apple' },
+    { id: 'sexual',    name: 'Sexual y reproductivo', zones: [[0, 0.86, 0.08, 0.09]], desc: 'Péptidos vinculados al deseo, la fertilidad y el eje reproductivo.',                  icon: 'venus-and-mars' },
+    { id: 'piel',      name: 'Piel y envejecimiento', zones: [[-0.27, 1.0, 0.02, 0.14], [0.27, 1.0, 0.02, 0.14], [0, 1.64, 0.1, 0.12]], desc: 'Péptidos cosméticos y los que se estudian en cicatrización y envejecimiento.',         icon: 'sparkles' },
+    { id: 'huesos',    name: 'Huesos y músculo', zones: [[-0.1, 0.5, 0.03, 0.1], [0.1, 0.5, 0.03, 0.1], [-0.2, 1.42, 0, 0.08], [0.2, 1.42, 0, 0.08]], desc: 'Reparación de tendones, músculo y hueso, en su mayoría con evidencia preclínica.',     icon: 'bone' }
   ],
 
   peptides: [
@@ -41,7 +42,16 @@ window.PT = {
     { slug: 'nesiritida', name: 'Nesiritida', alias: 'Nesiritide · BNP recombinante', sys: 'corazon', type: 'Polipéptido' }
   ],
 
+  // Fichas que rotan en la tarjeta del hero.
+  featured: ['bpc-157', 'semaglutida', 'tb-500', 'ghk-cu'],
+
   agencies: ['ANMAT', 'FDA', 'EMA', 'WADA'],
+  agencyInfo: {
+    ANMAT: { name: 'Argentina', icon: 'building-2' },
+    FDA: { name: 'Estados Unidos', icon: 'globe' },
+    EMA: { name: 'Unión Europea', icon: 'globe' },
+    WADA: { name: 'Antidopaje', icon: 'trophy' }
+  },
 
   // label → clase del punto + explicación
   statuses: [
