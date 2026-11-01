@@ -550,7 +550,7 @@
   var send = function (data) {
     return fetch(db.url + '/rest/v1/rpc/pt_submit_lead', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: db.anonKey, Authorization: 'Bearer ' + db.anonKey },
+      headers: { 'Content-Type': 'application/json', apikey: db.anonKey },
       body: JSON.stringify({ p: data })
     }).then(function (r) { if (!r.ok) throw new Error(r.status); });
   };

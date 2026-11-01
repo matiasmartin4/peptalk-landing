@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "research/peptides.json"
 OUT = ROOT / "peptides.js"
+SITE = ROOT / "research/site.json"   # qué agencias muestra el sitio (lo exporta scripts/db.py)
 
 AGENCIES = ["ANMAT", "FDA", "EMA", "WADA"]
 STATUSES = {"Aprobado", "En investigación", "No aprobado", "Prohibido", "Cosmético", "No listado", "Pendiente"}
@@ -73,12 +74,16 @@ def main():
     SOURCE.parent.mkdir(exist_ok=True)
     SOURCE.write_text(json.dumps(items, ensure_ascii=False, indent=2) + "\n")
 
-    keep = ("slug", "name", "alias", "sys", "type", "ev", "evNote", "summary", "status", "refs", "checked")
+    keep = ("slug", "name", "alias", "sys", "type", "ev", "evNote", "summary", "status", "refs", "checked",
+            "tags", "summaryPlain", "usage", "dosing", "specs", "images", "videos")
     slim = [{k: p[k] for k in keep if k in p} for p in items]
     for p in slim:  # la web no usa 'confidence'; queda en research/peptides.json
         p["status"] = {a: {k: v for k, v in s.items() if k != "confidence"} for a, s in p["status"].items()}
+    site = json.loads(SITE.read_text()) if SITE.exists() else {}
+    agencies = [a for a in site.get("agencies", AGENCIES) if a in AGENCIES]
     OUT.write_text("/* Generado por scripts/peptides.py desde research/peptides.json. No editar a mano. */\n"
-                   "window.PT.peptides = " + json.dumps(slim, ensure_ascii=False, separators=(",", ":")) + ";\n")
+                   "window.PT.peptides = " + json.dumps(slim, ensure_ascii=False, separators=(",", ":")) + ";\n"
+                   + ("window.PT.agencies = " + json.dumps(agencies) + ";\n" if agencies != AGENCIES else ""))
     print(f"{len(items)} péptidos · {bad} con errores · {OUT.name} {OUT.stat().st_size // 1024} KB")
     sys.exit(1 if bad else 0)
 

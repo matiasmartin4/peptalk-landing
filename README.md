@@ -45,13 +45,16 @@ python3 -m venv .venv && .venv/bin/pip install fonttools uharfbuzz
 
 Página: https://peptalkarg.com/admin/ (sin indexar). Sin conexión configurada corre en modo demo con las fichas actuales en memoria.
 
-- Base: Supabase (Postgres + login + archivos). Esquema y permisos en `supabase/migrations/`; la carga inicial de las 40 fichas en `supabase/seed.sql` (`python3 scripts/db.py seed`).
+- Base: Supabase, proyecto `peptalk` (ref `ksclxrhwaeddlxrdnfxi`, São Paulo, org MM-Proyectos). Esquema y permisos en `supabase/migrations/` (base, catálogo, tienda, novedades, contactos, archivos y accesos); carga inicial en `supabase/seed.sql` (`python3 scripts/db.py seed`). Aplicar cambios: `supabase db push --linked` (contraseña de la base en `~/.peptalk-db-password`, fuera del repo).
+- Ficha: además de lo que se ve hoy, guarda resumen simple, proceso de uso, dosis (sólo se publica si la firmó un médico con su usuario), especificaciones, etiquetas, imágenes (bucket público `media`) y videos. Qué sale al sitio lo decide `site_settings` (`agencias_visibles`, `secciones`); lo oculto nunca baja al repo, que es público.
+- Tienda (oculta, `site_settings.tienda.activa = false`): productos por concentración, precio y precio tachado, descuentos por cantidad, stock, certificado de análisis por lote y relacionados.
+- Novedades y newsletter: novedades con fuente (Grok las propone, una persona las aprueba) y ediciones semanales con banner, cuerpo editable con imágenes y las novedades o fichas de la semana; una edición enviada queda bloqueada.
 - Roles: **admin** (todo), **editor** (fichas, documentos, aprueba borradores, publica), **médico** (sólo sus contactos), **agente** (Grok: lee el catálogo y deja borradores). Los permisos viven en la base (RLS); el navegador sólo ve lo que su rol permite. Un usuario nuevo entra desactivado hasta que un admin lo activa.
 - Borradores: lo que propone un agente no toca la ficha hasta que un editor lo aprueba (`pt_approve_draft`).
 - Contactos: los formularios del sitio guardan con `pt_submit_lead`, la única función pública; el sitio no puede leer la tabla.
 - Historial: cada cambio en fichas, notas, documentos, borradores y contactos queda en `audit` con autor y fecha.
 - Publicar: el botón llama a la función `supabase/functions/publish`, que dispara `.github/workflows/publicar.yml`: baja las fichas publicadas (`scripts/db.py export`), corre `peptides.py` y `bust.py` y commitea. GitHub Pages redeploya solo.
-- Probar migración y permisos por rol en un Postgres local: `./scripts/test_db.sh`.
+- Probar migraciones y permisos por rol (50 casos) en un Postgres local: `./scripts/test_db.sh`.
 
 Puesta en marcha (una vez):
 

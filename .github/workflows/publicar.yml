@@ -29,5 +29,5 @@ jobs:
         run: |
           git config user.name "peptalk backoffice"
           git config user.email "backoffice@peptalkarg.com"
-          git add research/peptides.json peptides.js index.html app.js
+          git add research/peptides.json research/site.json peptides.js index.html app.js
           git diff --cached --quiet || { git commit -m "Publicación desde el backoffice"; git push; }
