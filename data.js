@@ -13,7 +13,7 @@ window.PT = {
     { id: 'corazon',   name: 'Corazón y sangre', zones: [[0.04, 1.29, 0.08, 0.1]], desc: 'Anticoagulantes, péptidos natriuréticos y otros con uso cardiovascular.',             icon: 'heart-pulse' },
     { id: 'digestivo', name: 'Digestivo y peso', zones: [[0, 1.06, 0.07, 0.16]], desc: 'Agonistas de GLP-1, péptidos gástricos y los que se estudian en peso corporal.',        icon: 'apple' },
     { id: 'sexual',    name: 'Sexual y reproductivo', zones: [[0, 0.86, 0.08, 0.09]], desc: 'Péptidos vinculados al deseo, la fertilidad y el eje reproductivo.',                  icon: 'venus-and-mars' },
-    { id: 'piel',      name: 'Piel y envejecimiento', zones: [[-0.27, 1.0, 0.02, 0.14], [0.27, 1.0, 0.02, 0.14], [0, 1.64, 0.1, 0.12]], desc: 'Péptidos cosméticos y los que se estudian en cicatrización y envejecimiento.',         icon: 'sparkles' },
+    { id: 'piel',      name: 'Piel y envejecimiento', zones: [[-0.24, 1.02, 0.02, 0.13], [0.24, 1.02, 0.02, 0.13], [0, 1.64, 0.1, 0.12]], desc: 'Péptidos cosméticos y los que se estudian en cicatrización y envejecimiento.',         icon: 'sparkles' },
     { id: 'huesos',    name: 'Huesos y músculo', zones: [[-0.1, 0.5, 0.03, 0.1], [0.1, 0.5, 0.03, 0.1], [-0.2, 1.42, 0, 0.08], [0.2, 1.42, 0, 0.08]], desc: 'Reparación de tendones, músculo y hueso, en su mayoría con evidencia preclínica.',     icon: 'bone' }
   ],
 

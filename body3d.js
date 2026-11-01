@@ -8,105 +8,146 @@
   'use strict';
 
   /* ---------- anatomía (metros; pies en y = 0) ---------- */
-  // e: elipsoide [cx, cy, cz, rx, ry, rz] · c: cápsula [ax, ay, az, bx, by, bz, ra, rb]
-  var PARTS = [
-    { e: [0, 1.655, 0, 0.088, 0.115, 0.102] },            // cabeza
-    { e: [0, 1.575, 0.035, 0.06, 0.05, 0.06] },            // mandíbula
-    { c: [0, 1.47, 0, 0, 1.56, 0.005, 0.054, 0.048] },     // cuello
-    { e: [0, 1.31, 0, 0.175, 0.17, 0.105] },               // tórax
-    { e: [0, 1.4, 0, 0.2, 0.06, 0.085] },                  // hombros / trapecio
-    { e: [0, 1.1, 0.005, 0.14, 0.16, 0.095] },             // abdomen
-    { e: [0, 0.93, 0, 0.165, 0.1, 0.105] },                // pelvis
-    { e: [-0.2, 1.405, 0, 0.065, 0.065, 0.065] },          // deltoides
-    { e: [0.2, 1.405, 0, 0.065, 0.065, 0.065] },
-    { c: [-0.215, 1.39, 0, -0.245, 1.11, 0.01, 0.052, 0.04] },   // brazos
-    { c: [0.215, 1.39, 0, 0.245, 1.11, 0.01, 0.052, 0.04] },
-    { c: [-0.245, 1.11, 0.01, -0.275, 0.86, 0.04, 0.04, 0.028] }, // antebrazos
-    { c: [0.245, 1.11, 0.01, 0.275, 0.86, 0.04, 0.04, 0.028] },
-    { e: [-0.282, 0.79, 0.045, 0.028, 0.068, 0.017] },     // manos
-    { e: [0.282, 0.79, 0.045, 0.028, 0.068, 0.017] },
-    { c: [-0.088, 0.9, 0, -0.098, 0.5, 0.012, 0.085, 0.056] },   // muslos
-    { c: [0.088, 0.9, 0, 0.098, 0.5, 0.012, 0.085, 0.056] },
-    { c: [-0.098, 0.5, 0.012, -0.1, 0.09, -0.008, 0.05, 0.032] }, // piernas
-    { c: [0.098, 0.5, 0.012, 0.1, 0.09, -0.008, 0.05, 0.032] },
-    { e: [-0.1, 0.38, -0.018, 0.05, 0.11, 0.05] },         // gemelos
-    { e: [0.1, 0.38, -0.018, 0.05, 0.11, 0.05] },
-    { e: [-0.102, 0.035, 0.045, 0.04, 0.033, 0.1] },       // pies
-    { e: [0.102, 0.035, 0.045, 0.04, 0.033, 0.1] }
+  // Una sola piel: los volúmenes se funden con unión suave (smin), así las uniones
+  // (cuello, axilas, muñecas, tobillos) quedan continuas como en un cuerpo real.
+  // e: elipsoide [cx, cy, cz, rx, ry, rz] · c: cono redondeado [ax, ay, az, bx, by, bz, ra, rb]
+  // g: grupo (cada brazo y pierna se funde por dentro y se une al tronco con poca mezcla)
+  // k: radio de fusión con lo anterior del grupo · m: se espeja (lado izquierdo)
+  var DEF = [
+    { g: 'torso', e: [0, 1.69, 0.005, 0.076, 0.104, 0.094] },              // cráneo
+    { g: 'torso', k: .04, e: [0, 1.705, -0.02, 0.079, 0.088, 0.088] },      // occipital
+    { g: 'torso', k: .035, e: [0, 1.618, 0.038, 0.052, 0.042, 0.052] },     // mandíbula y mentón
+    { g: 'torso', k: .012, e: [0, 1.672, 0.094, 0.011, 0.022, 0.016] },     // nariz
+    { g: 'torso', k: .01, m: 1, e: [0.077, 1.68, -0.005, 0.012, 0.03, 0.019] }, // orejas
+    { g: 'torso', k: .035, c: [0, 1.49, -0.01, 0, 1.63, 0.0, 0.054, 0.046] },  // cuello
+    { g: 'torso', k: .06, m: 1, c: [0.02, 1.535, -0.025, 0.165, 1.462, -0.015, 0.04, 0.034] }, // trapecio
+    { g: 'torso', k: .06, e: [0, 1.33, -0.005, 0.158, 0.17, 0.1] },        // caja torácica
+    { g: 'torso', k: .04, m: 1, e: [0.072, 1.37, 0.055, 0.074, 0.055, 0.042] }, // pectorales
+    { g: 'torso', k: .03, m: 1, e: [0.075, 1.36, -0.06, 0.08, 0.1, 0.045] },    // dorsales / escápulas
+    { g: 'torso', k: .045, m: 1, e: [0.185, 1.43, -0.008, 0.058, 0.066, 0.058] }, // deltoides
+    { g: 'torso', k: .08, e: [0, 1.12, 0.0, 0.128, 0.15, 0.088] },         // abdomen y cintura
+    { g: 'torso', k: .07, e: [0, 0.955, -0.008, 0.162, 0.105, 0.1] },      // pelvis y caderas
+    { g: 'torso', k: .04, m: 1, e: [0.068, 0.93, -0.052, 0.078, 0.088, 0.066] }, // glúteos
+
+    { g: 'arm', m: 1, c: [0.195, 1.42, -0.01, 0.228, 1.135, -0.015, 0.045, 0.034] },  // brazo
+    { g: 'arm', m: 1, k: .03, e: [0.208, 1.285, 0.012, 0.036, 0.075, 0.038] },        // bíceps
+    { g: 'arm', m: 1, k: .03, e: [0.206, 1.3, -0.03, 0.035, 0.08, 0.034] },           // tríceps
+    { g: 'arm', m: 1, k: .025, c: [0.228, 1.135, -0.015, 0.258, 0.88, 0.015, 0.035, 0.024] }, // antebrazo
+    { g: 'arm', m: 1, k: .03, e: [0.234, 1.065, -0.004, 0.038, 0.075, 0.036] },       // músculos del antebrazo
+    { g: 'arm', m: 1, k: .02, e: [0.264, 0.83, 0.02, 0.017, 0.047, 0.04] },           // palma
+    { g: 'arm', m: 1, k: .015, e: [0.266, 0.756, 0.026, 0.013, 0.048, 0.034] },       // dedos
+    { g: 'arm', m: 1, k: .012, c: [0.256, 0.835, 0.052, 0.252, 0.785, 0.07, 0.012, 0.009] }, // pulgar
+
+    { g: 'leg', m: 1, c: [0.088, 0.93, -0.005, 0.086, 0.53, 0.012, 0.084, 0.054] },   // muslo
+    { g: 'leg', m: 1, k: .04, e: [0.092, 0.73, 0.03, 0.062, 0.15, 0.058] },           // cuádriceps
+    { g: 'leg', m: 1, k: .03, e: [0.08, 0.72, -0.03, 0.058, 0.14, 0.05] },            // isquiotibiales
+    { g: 'leg', m: 1, k: .03, e: [0.086, 0.5, 0.02, 0.046, 0.05, 0.048] },            // rodilla
+    { g: 'leg', m: 1, k: .03, c: [0.086, 0.5, 0.0, 0.092, 0.085, -0.012, 0.046, 0.03] }, // pierna
+    { g: 'leg', m: 1, k: .035, e: [0.092, 0.36, -0.03, 0.05, 0.11, 0.048] },          // gemelos
+    { g: 'leg', m: 1, k: .03, e: [0.097, 0.042, 0.04, 0.04, 0.034, 0.105] },          // pie
+    { g: 'leg', m: 1, k: .025, e: [0.093, 0.055, -0.03, 0.032, 0.042, 0.035] }        // talón
   ];
+  var JOIN = 0.022;   // fusión entre tronco y extremidades
   var HEIGHT = 1.8;
 
-  // función de distancia aproximada (negativa = adentro)
-  var sdf = function (part, x, y, z) {
-    if (part.e) {
-      var e = part.e, dx = (x - e[0]) / e[3], dy = (y - e[1]) / e[4], dz = (z - e[2]) / e[5];
-      return (Math.sqrt(dx * dx + dy * dy + dz * dz) - 1) * Math.min(e[3], e[4], e[5]);
+  var GROUPS = (function () {
+    var by = {};
+    DEF.forEach(function (d) {
+      var sides = d.m ? [1, -1] : [1];
+      sides.forEach(function (sx) {
+        var g = d.g === 'torso' ? 'torso' : d.g + (sx > 0 ? 'R' : 'L');
+        var p = { k: d.k || 0 };
+        if (d.e) p.e = [d.e[0] * sx, d.e[1], d.e[2], d.e[3], d.e[4], d.e[5]];
+        else p.c = [d.c[0] * sx, d.c[1], d.c[2], d.c[3] * sx, d.c[4], d.c[5], d.c[6], d.c[7]];
+        (by[g] = by[g] || []).push(p);
+      });
+    });
+    return Object.keys(by).map(function (g) {
+      var lo = [9, 9, 9], hi = [-9, -9, -9];
+      by[g].forEach(function (p) {
+        var pts = p.e ? [[p.e[0] - p.e[3], p.e[1] - p.e[4], p.e[2] - p.e[5]], [p.e[0] + p.e[3], p.e[1] + p.e[4], p.e[2] + p.e[5]]]
+          : [[p.c[0] - p.c[6], p.c[1] - p.c[6], p.c[2] - p.c[6]], [p.c[0] + p.c[6], p.c[1] + p.c[6], p.c[2] + p.c[6]],
+             [p.c[3] - p.c[7], p.c[4] - p.c[7], p.c[5] - p.c[7]], [p.c[3] + p.c[7], p.c[4] + p.c[7], p.c[5] + p.c[7]]];
+        pts.forEach(function (q) { for (var i = 0; i < 3; i++) { lo[i] = Math.min(lo[i], q[i]); hi[i] = Math.max(hi[i], q[i]); } });
+      });
+      return { name: g, parts: by[g], lo: lo, hi: hi };
+    });
+  })();
+
+  var smin = function (a, b, k) {
+    if (k <= 0) return Math.min(a, b);
+    var h = Math.max(k - Math.abs(a - b), 0) / k;
+    return Math.min(a, b) - h * h * k * 0.25;
+  };
+  var partDist = function (p, x, y, z) {
+    if (p.e) {  // elipsoide (aproximación de Íñigo Quílez)
+      var e = p.e, px = (x - e[0]) / e[3], py = (y - e[1]) / e[4], pz = (z - e[2]) / e[5];
+      var k0 = Math.sqrt(px * px + py * py + pz * pz);
+      var k1 = Math.sqrt(px * px / (e[3] * e[3]) + py * py / (e[4] * e[4]) + pz * pz / (e[5] * e[5]));
+      return k1 > 1e-9 ? k0 * (k0 - 1) / k1 : -Math.min(e[3], e[4], e[5]);
     }
-    var c = part.c, abx = c[3] - c[0], aby = c[4] - c[1], abz = c[5] - c[2];
+    var c = p.c, abx = c[3] - c[0], aby = c[4] - c[1], abz = c[5] - c[2];
     var t = ((x - c[0]) * abx + (y - c[1]) * aby + (z - c[2]) * abz) / (abx * abx + aby * aby + abz * abz);
     t = Math.max(0, Math.min(1, t));
-    var px = c[0] + abx * t - x, py = c[1] + aby * t - y, pz = c[2] + abz * t - z;
-    return Math.sqrt(px * px + py * py + pz * pz) - (c[6] + (c[7] - c[6]) * t);
+    var qx = c[0] + abx * t - x, qy = c[1] + aby * t - y, qz = c[2] + abz * t - z;
+    return Math.sqrt(qx * qx + qy * qy + qz * qz) - (c[6] + (c[7] - c[6]) * t);
   };
-  var area = function (p) {
-    if (p.e) return 4 * Math.PI * Math.pow((p.e[3] * p.e[4] + p.e[3] * p.e[5] + p.e[4] * p.e[5]) / 3, 1);
-    var c = p.c, len = Math.hypot(c[3] - c[0], c[4] - c[1], c[5] - c[2]);
-    return 2 * Math.PI * (c[6] + c[7]) / 2 * len + 2 * Math.PI * (c[6] * c[6] + c[7] * c[7]);
-  };
-  var randDir = function () {
-    var u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, s = Math.sqrt(1 - u * u);
-    return [s * Math.cos(a), u, s * Math.sin(a)];
-  };
-  var samplePart = function (p) {
-    if (p.e) {
-      var d = randDir(), e = p.e, nx = d[0] / e[3], ny = d[1] / e[4], nz = d[2] / e[5], nl = Math.hypot(nx, ny, nz);
-      var q = [e[0] + d[0] * e[3], e[1] + d[1] * e[4], e[2] + d[2] * e[5]];
-      q.n = [nx / nl, ny / nl, nz / nl];
-      return q;
+  // distancia con signo a la piel (negativa = adentro)
+  var bodyDist = function (x, y, z) {
+    var d = 1;
+    for (var g = 0; g < GROUPS.length; g++) {
+      var G = GROUPS[g];
+      var bx = Math.max(G.lo[0] - x, 0, x - G.hi[0]), by = Math.max(G.lo[1] - y, 0, y - G.hi[1]), bz = Math.max(G.lo[2] - z, 0, z - G.hi[2]);
+      if (Math.sqrt(bx * bx + by * by + bz * bz) > d + JOIN) continue;  // la caja ya está más lejos que lo encontrado
+      var dg = 1;
+      for (var i = 0; i < G.parts.length; i++) dg = smin(dg, partDist(G.parts[i], x, y, z), G.parts[i].k);
+      d = smin(d, dg, JOIN);
     }
-    var c = p.c, t = Math.random(), r = c[6] + (c[7] - c[6]) * t;
-    var ax = [c[3] - c[0], c[4] - c[1], c[5] - c[2]], len = Math.hypot(ax[0], ax[1], ax[2]);
-    ax = ax.map(function (v) { return v / len; });
-    var ref = Math.abs(ax[1]) < .9 ? [0, 1, 0] : [1, 0, 0];
-    var u = [ax[1] * ref[2] - ax[2] * ref[1], ax[2] * ref[0] - ax[0] * ref[2], ax[0] * ref[1] - ax[1] * ref[0]];
-    var ul = Math.hypot(u[0], u[1], u[2]); u = u.map(function (v) { return v / ul; });
-    var w = [ax[1] * u[2] - ax[2] * u[1], ax[2] * u[0] - ax[0] * u[2], ax[0] * u[1] - ax[1] * u[0]];
-    var a = Math.random() * Math.PI * 2, ca = Math.cos(a) * r, sa = Math.sin(a) * r;
-    var out = [c[0] + ax[0] * len * t + u[0] * ca + w[0] * sa, c[1] + ax[1] * len * t + u[1] * ca + w[1] * sa, c[2] + ax[2] * len * t + u[2] * ca + w[2] * sa];
-    out.n = [(u[0] * ca + w[0] * sa) / r, (u[1] * ca + w[1] * sa) / r, (u[2] * ca + w[2] * sa) / r];
-    return out;
+    return d;
   };
-  var insideOther = function (pt, self) {
-    for (var i = 0; i < PARTS.length; i++) if (PARTS[i] !== self && sdf(PARTS[i], pt[0], pt[1], pt[2]) < -0.004) return true;
-    return false;
+  var normalAt = function (x, y, z) {  // gradiente por tetraedro (4 evaluaciones)
+    var h = 0.002, a = bodyDist(x + h, y - h, z - h), b = bodyDist(x - h, y - h, z + h), c = bodyDist(x - h, y + h, z - h), d = bodyDist(x + h, y + h, z + h);
+    var nx = a - b - c + d, ny = -a - b + c + d, nz = -a + b - c + d, l = Math.hypot(nx, ny, nz) || 1;
+    return [nx / l, ny / l, nz / l];
   };
 
   var buildCloud = function (systems, total, interior) {
-    var areas = PARTS.map(area), sum = areas.reduce(function (a, b) { return a + b; }, 0);
-    var pts = [];
-    PARTS.forEach(function (p, i) {
-      var n = Math.round(total * areas[i] / sum), tries = 0;
-      while (n > 0 && tries++ < n * 6) { var q = samplePart(p); if (!insideOther(q, p)) { pts.push(q); n--; } }
-    });
-    // volumen interior tenue: da profundidad y deja "ver" los órganos encendidos
-    var surfaceCount = pts.length;
-    for (var k = 0; k < interior; k++) {
-      var part = PARTS[(Math.random() * 9) | 0], q2 = samplePart(part), s = Math.pow(Math.random(), .6);
-      var cx = part.e ? part.e[0] : (part.c[0] + part.c[3]) / 2, cy = part.e ? part.e[1] : (part.c[1] + part.c[4]) / 2, cz = part.e ? part.e[2] : (part.c[2] + part.c[5]) / 2;
-      pts.push([cx + (q2[0] - cx) * s, cy + (q2[1] - cy) * s, cz + (q2[2] - cz) * s]);
+    // 1) grilla gruesa: sólo se muestrea en las celdas que cruza la piel
+    var CELL = 0.02, X0 = -0.34, Y0 = -0.01, Z0 = -0.17, NX = 34, NY = 93, NZ = 20, cells = [];
+    for (var ix = 0; ix < NX; ix++) for (var iy = 0; iy < NY; iy++) for (var iz = 0; iz < NZ; iz++) {
+      var cx = X0 + (ix + .5) * CELL, cy = Y0 + (iy + .5) * CELL, cz = Z0 + (iz + .5) * CELL;
+      if (Math.abs(bodyDist(cx, cy, cz)) < CELL * 0.9) cells.push(cx, cy, cz);
+    }
+    var nCells = cells.length / 3, pts = [], SHELL = 0.0035, guard = total * 12;
+    // 2) puntos uniformes en una cáscara fina, proyectados sobre la piel
+    while (pts.length < total && guard-- > 0) {
+      var ci = ((Math.random() * nCells) | 0) * 3;
+      var x = cells[ci] + (Math.random() - .5) * CELL, y = cells[ci + 1] + (Math.random() - .5) * CELL, z = cells[ci + 2] + (Math.random() - .5) * CELL;
+      var d = bodyDist(x, y, z);
+      if (Math.abs(d) > SHELL) continue;
+      var n = normalAt(x, y, z);
+      var q = [x - n[0] * d, y - n[1] * d, z - n[2] * d];
+      q.n = n;
+      pts.push(q);
+    }
+    // 3) volumen interior tenue en el tronco: deja "ver" los órganos encendidos
+    var surfaceCount = pts.length; guard = interior * 40;
+    while (pts.length < surfaceCount + interior && guard-- > 0) {
+      var p = [(Math.random() - .5) * 0.34, 0.86 + Math.random() * 0.86, (Math.random() - .5) * 0.22];
+      if (bodyDist(p[0], p[1], p[2]) < -0.012) pts.push(p);
     }
 
     var n = pts.length, nor = new Float32Array(n * 3), pos = new Float32Array(n * 3), w0 = new Float32Array(n * 4), w1 = new Float32Array(n * 4), rnd = new Float32Array(n), surf = new Float32Array(n);
     pts.forEach(function (q, i) {
       pos[i * 3] = q[0]; pos[i * 3 + 1] = q[1] - HEIGHT / 2; pos[i * 3 + 2] = q[2];
-      if (q.n && i < surfaceCount) { nor[i * 3] = q.n[0]; nor[i * 3 + 1] = q.n[1]; nor[i * 3 + 2] = q.n[2]; }
+      if (q.n) { nor[i * 3] = q.n[0]; nor[i * 3 + 1] = q.n[1]; nor[i * 3 + 2] = q.n[2]; }
       rnd[i] = Math.random();
       surf[i] = i < surfaceCount ? 1 : 0;
       systems.forEach(function (sys, si) {
         var best = 0;
         sys.zones.forEach(function (z) {
-          var d = Math.hypot(q[0] - z[0], q[1] - z[1], (q[2] - z[2]) * .6);
-          best = Math.max(best, 1 - Math.min(1, Math.max(0, (d - z[3] * .45) / (z[3] * .9))));
+          var dd = Math.hypot(q[0] - z[0], q[1] - z[1], (q[2] - z[2]) * .6);
+          best = Math.max(best, 1 - Math.min(1, Math.max(0, (dd - z[3] * .45) / (z[3] * .9))));
         });
         (si < 4 ? w0 : w1)[i * 4 + (si % 4)] = best * best * (3 - 2 * best);
       });
@@ -123,7 +164,9 @@
     'void main() {',
     '  vec3 p = position;',
     '  vec3 nv = normalize(normalMatrix * (aNormal + vec3(0.0, 0.0, 1e-4)));',
-    '  vRim = pow(1.0 - abs(nv.z), 2.2) * aSurf;',
+    '  vRim = pow(1.0 - abs(nv.z), 3.0) * aSurf;',
+    '  float key = max(dot(nv, normalize(vec3(-0.45, 0.6, 0.65))), 0.0);',
+    '  float face = smoothstep(-0.35, 0.4, nv.z);',
     '  float breath = sin(uTime * 1.25) * 0.006 * uMotion;',
     '  p.xz *= 1.0 + breath * smoothstep(0.7, 0.15, abs(p.y - 0.4));',
     '  p += 0.0025 * uMotion * vec3(sin(uTime * 0.9 + aRand * 40.0), cos(uTime * 1.1 + aRand * 31.0), sin(uTime * 0.7 + aRand * 17.0));',
@@ -135,10 +178,11 @@
     '  vActive = dot(aW0, uAct0) + dot(aW1, uAct1);',
     '  vHover = dot(aW0, uHov0) + dot(aW1, uHov1);',
     '  vNear = f;',
-    '  vAlpha = (mix(0.32, 0.7, aSurf) + vRim * 1.9) * (0.7 + 0.3 * sin(uTime * 2.0 + aRand * 60.0) * uMotion + 0.3 * (1.0 - uMotion));',
+    '  float lit = mix(0.16, (0.18 + 0.62 * key + 0.4 * vRim) * mix(0.32, 1.0, face), aSurf);',
+    '  vAlpha = lit * (0.8 + 0.2 * sin(uTime * 2.0 + aRand * 60.0) * uMotion + 0.2 * (1.0 - uMotion));',
     '  vec4 mv = modelViewMatrix * vec4(p, 1.0);',
     '  gl_Position = projectionMatrix * mv;',
-    '  float s = uSize * (0.55 + aRand * 0.7) * (1.0 + vActive * 1.3 + vHover * 0.5 + f * 1.4 + vRim * 0.5) * mix(0.7, 1.0, aSurf);',
+    '  float s = uSize * (0.55 + aRand * 0.7) * (1.0 + vActive * 0.9 + vHover * 0.4 + f * 1.0) * mix(0.75, 1.0, aSurf);',
     '  gl_PointSize = s * uPR / -mv.z;',
     '}'
   ].join('\n');
@@ -148,10 +192,10 @@
     '  float r = length(gl_PointCoord - 0.5);',
     '  if (r > 0.5) discard;',
     '  float soft = smoothstep(0.5, 0.0, r);',
-    '  vec3 base = mix(vec3(1.0, 0.80, 0.64), vec3(1.0, 0.94, 0.86), vRim);',
-    '  vec3 hot = mix(vec3(1.0, 0.42, 0.0), vec3(1.0, 0.78, 0.45), soft);',
+    '  vec3 base = mix(vec3(1.0, 0.76, 0.58), vec3(1.0, 0.9, 0.8), vRim);',
+    '  vec3 hot = mix(vec3(1.0, 0.36, 0.0), vec3(1.0, 0.62, 0.28), soft);',
     '  vec3 col = mix(base, hot, clamp(vActive + vHover * 0.45 + vNear * 0.6, 0.0, 1.0));',
-    '  float a = vAlpha * soft * (0.9 + vActive * 1.4 + vHover * 0.5 + vNear * 1.0);',
+    '  float a = vAlpha * soft * (1.0 + vActive * 0.9 + vHover * 0.35 + vNear * 0.6);',
     '  gl_FragColor = vec4(col * a, a);',
     '}'
   ].join('\n');
@@ -281,7 +325,8 @@
       camera.updateProjectionMatrix();
     }
     resize();
-    new ResizeObserver(resize).observe(container);
+    var ro = new ResizeObserver(resize);
+    ro.observe(container);
 
     /* loop: sólo corre visible */
     var visible = false, raf = 0, clock = new THREE.Clock(), v = new THREE.Vector3();
@@ -315,11 +360,18 @@
       raf = requestAnimationFrame(frame);
     }
     function wake() { if (!raf) raf = requestAnimationFrame(frame); }
-    new IntersectionObserver(function (en) { visible = en[0].isIntersecting; if (visible) wake(); }, { rootMargin: '100px' }).observe(container);
+    // los observers quedan referenciados en la instancia: sin referencia, el GC puede descartarlos
+    var io = new IntersectionObserver(function (en) { visible = en[en.length - 1].isIntersecting; if (visible) wake(); }, { rootMargin: '100px' });
+    io.observe(container);
     document.addEventListener('visibilitychange', wake);
+    // si la página abre ya scrolleada (#sistemas), no esperar al primer aviso del observer
+    requestAnimationFrame(function () {
+      var r = container.getBoundingClientRect();
+      if (r.bottom > 0 && r.top < innerHeight) { visible = true; wake(); }
+    });
 
     if (opts.onReady) opts.onReady();
-    return { select: function (id) { select(id); wake(); } };
+    return { select: function (id) { select(id); wake(); }, _observers: [io, ro] };
   }
 
   window.PTBody = { mount: mount };
