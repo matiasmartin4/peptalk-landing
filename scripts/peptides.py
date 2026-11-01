@@ -75,7 +75,7 @@ def main():
     SOURCE.write_text(json.dumps(items, ensure_ascii=False, indent=2) + "\n")
 
     keep = ("slug", "name", "alias", "sys", "type", "ev", "evNote", "summary", "status", "refs", "checked",
-            "tags", "summaryPlain", "usage", "dosing", "specs", "images", "videos")
+            "tags", "sequence", "summaryPlain", "usage", "dosing", "specs", "images", "videos")
     slim = [{k: p[k] for k in keep if k in p} for p in items]
     for p in slim:  # la web no usa 'confidence'; queda en research/peptides.json
         p["status"] = {a: {k: v for k, v in s.items() if k != "confidence"} for a, s in p["status"].items()}

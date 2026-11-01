@@ -60,6 +60,9 @@ def export():
              "evNote": r["ev_note"], "summary": r["summary"], "status": r["status"], "refs": r["refs"], "checked": r["checked"]}
         if r["tags"]:
             p["tags"] = r["tags"]
+        # la secuencia es un dato científico público y es lo que dibuja cada tarjeta: sale siempre
+        if r.get("sequence"):
+            p["sequence"] = r["sequence"]
         if sec.get("resumen_simple") and r["summary_plain"]:
             p["summaryPlain"] = r["summary_plain"]
         if sec.get("uso") and r["usage_process"]:
